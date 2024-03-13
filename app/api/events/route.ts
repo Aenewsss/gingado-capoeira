@@ -7,9 +7,11 @@ export function GET() {
     return NextResponse.json({events})
 }
 
-export function POST(req: Request) {
+export async function POST(req: Request) {
 
-    
+    const body = await req.json()
+    console.log(body)
+
     const newEvent = null
     
     return NextResponse.json({newEvent})
