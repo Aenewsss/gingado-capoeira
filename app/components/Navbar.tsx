@@ -7,9 +7,9 @@ import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 const navigation = [
     { name: 'Gingado Capoeira', href: '#sobre', current: false },
     { name: 'Graduação', href: '#sistema', current: false },
-    { name: 'Eventos', href: '#', current: false },
-    { name: 'Galeria', href: '#', current: false },
-    { name: 'Nossa Sede', href: '#', current: true },
+    { name: 'Eventos', href: '#eventos', current: false },
+    { name: 'Galeria', href: '#galeria', current: false },
+    { name: 'Nossa Sede', href: '#sede', current: true },
 ]
 
 function classNames(...classes: string[]) {

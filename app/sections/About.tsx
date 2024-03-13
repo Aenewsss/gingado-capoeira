@@ -11,7 +11,7 @@ export default function About() {
             <div className="pt-10 lg:pt-20 w-full top-0 z-10 relative lg:absolute">
                 <div className="px-2 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                     <h1 className="text-4xl lg:text-6xl">Associação Cultural Gingado Capoeira</h1>
-                    <p className="text-base lg:text-lg mt-6 font-light leading-7">
+                    <p className="text-base lg:text-xl mt-6 font-light leading-7">
                         A Associação Cultural Gingado Capoeira, foi fundada no dia 13 de setembro de 2006, na cidade de Brasilia-DF, tendo como fundador, Pablo Balduino de Magalhães (Mestre Pablo).
                         <br />
                         Nossa proposta é desenvolver a capoeira como um todo, buscar um padrão na metodologia de ensino e prática de várias modalidades que compõem a capoeira como arte, cultura, desporto, profissão e filosofia de vida.
