@@ -4,6 +4,7 @@ import { isVideo } from "../utils/is-video.util";
 import { resolveImagePath } from "../utils/resolve-image-path.util";
 import { TypeImageEnum } from "../enums/type-image.enum";
 import getEvents from "../actions/get-events.action";
+import Footer from "../components/Footer";
 
 export default async function Gallery() {
 
@@ -13,7 +14,7 @@ export default async function Gallery() {
         <main>
             <Top onlyShowNavbar={true} />
 
-            <h1 className="my-10 text-5xl text-center">Galeria de Fotos e Vídeos</h1>
+            <h1 className="my-10 text-5xl text-center">Eventos Gingado Capoeira</h1>
 
             <section className=" px-2 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-wrap gap-10 justify-center">
                 {
@@ -22,6 +23,10 @@ export default async function Gallery() {
                     )
                 }
             </section>
+
+            <div className="mt-20"></div>
+            <Footer />
+
         </main>
     )
 }

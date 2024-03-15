@@ -6,7 +6,7 @@ export default function Footer() {
         <footer className="py-20">
             <div className="px-2 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 <div className="flex justify-center sm:justify-between items-center flex-wrap">
-                    <Image width={60} height={60} src="/favicon.svg" alt="Logo" />
+                    <Link href="/"><Image width={60} height={60} src="/favicon.svg" alt="Logo" /></Link>
                     <ul className="flex gap-4 items-center flex-wrap sm:mt-0 mt-10 justify-center">
                         <li className="hover:font-medium"><Link href="#sobre">Gingado Capoeira</Link></li>
                         <li className="hover:font-medium"><Link href="#sistema">Graduação</Link></li>

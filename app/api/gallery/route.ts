@@ -5,7 +5,7 @@ import { PublicPathsEnum } from "@/app/enums/public-paths.enum"
 export function GET() {
     const path = PublicPathsEnum.GALLERY
 
-    const media = fs.readdirSync(path).reverse()
+    const media = fs.readdirSync(path).filter(el => el != "home").reverse()
 
     if (!media.length) return NextResponse.json({ media, message: "Nenhuma mídia adicionada" })
 

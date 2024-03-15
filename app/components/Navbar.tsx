@@ -1,8 +1,9 @@
 "use client"
 
-import { Fragment } from 'react'
-import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Disclosure, } from '@headlessui/react'
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import Image from "next/image"
+import Link from "next/link"
 
 const navigation = [
     { name: 'Gingado Capoeira', href: '/#sobre', current: false },
@@ -37,11 +38,15 @@ export default function Example() {
                             </div>
                             <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                                 <div className="flex flex-shrink-0 items-center">
-                                    <img
-                                        className="h-12 sm:h-20 w-auto"
-                                        src="/logo-completa.svg"
-                                        alt="Your Company"
-                                    />
+                                    <Link href="/">
+                                        <Image
+                                            className="h-12 sm:h-20 w-auto"
+                                            src="/logo-completa.svg"
+                                            alt="Your Company"
+                                            width={300}
+                                            height={200}
+                                        />
+                                    </Link>
                                 </div>
 
                             </div>
