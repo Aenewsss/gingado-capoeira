@@ -6,4 +6,5 @@ import { TagsEnum } from "../enums/tags.enum";
 
 export default async function getEvents() {
     return await (await fetch(`${environments.API_URL}/events`, { next: { tags: [TagsEnum.EVENT] } })).json()
+
 }

@@ -18,6 +18,7 @@ export default async function Events() {
         }
         fetchEvents()
     }, []);
+
     return (
         <section className="pt-20 bg-white flex justify-center flex-col" id="eventos">
             <h2 className="text-4xl lg:text-6xl text-center text-blue-950">Próximos Eventos</h2>

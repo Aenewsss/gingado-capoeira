@@ -6,6 +6,7 @@ import { TagsEnum } from "../enums/tags.enum"
 
 export default async function removeEvent(prevState: any, form: FormData) {
     const { message } = await (await fetch(`${environments.API_URL}/events`,
+
         {
             method: 'DELETE',
             body: form
