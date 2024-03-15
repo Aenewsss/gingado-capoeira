@@ -2,15 +2,12 @@ import { NextResponse } from "next/server"
 import fs from "fs"
 import path from "path"
 import { PublicPathsEnum } from "@/app/enums/public-paths.enum"
-import getConfig from "next/config"
 
 export function GET() {
 
-    const { serverRuntimeConfig } = getConfig()
-
     const folder = PublicPathsEnum.EVENTS
   
-    const dir = path.join(serverRuntimeConfig.PROJECT_ROOT, './public', folder);    
+    const dir = path.resolve('./public', folder);    
 
     const events = fs.readdirSync(dir).reverse()
 
