@@ -5,7 +5,8 @@ import { revalidateTag } from "next/cache"
 import { TagsEnum } from "../enums/tags.enum"
 
 export default async function removeMedia(prevState: any, form: FormData) {
-    const { message } = await (await fetch(`${environments.API_URL}/api/gallery`,
+    const { message } = await (await fetch(`${environments.API_URL}/gallery`,
+
         {
             method: 'DELETE',
             body: form

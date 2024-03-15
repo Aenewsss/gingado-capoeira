@@ -5,7 +5,8 @@ import { revalidateTag } from "next/cache"
 import { TagsEnum } from "../enums/tags.enum"
 
 export default async function removeEvent(prevState: any, form: FormData) {
-    const { message } = await (await fetch(`${environments.API_URL}/api/events`,
+    const { message } = await (await fetch(`${environments.API_URL}/events`,
+
         {
             method: 'DELETE',
             body: form
