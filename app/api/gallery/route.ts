@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server"
 import fs from "fs"
 import { PublicPathsEnum } from "@/app/enums/public-paths.enum"
+import path from "path";
 
 export function GET() {
-    const path = PublicPathsEnum.GALLERY
+    const folder = PublicPathsEnum.GALLERY
 
-    const media = fs.readdirSync(path).filter(el => el != "home").reverse()
+    const dir = path.resolve('./public', folder);    
+
+    const media = fs.readdirSync(dir).filter(el => el != "home").reverse()
 
     if (!media.length) return NextResponse.json({ media, message: "Nenhuma mídia adicionada" })
 
@@ -23,13 +26,15 @@ export async function POST(req: Request) {
     const { length } = fs.readdirSync(PublicPathsEnum.GALLERY)
     const imageId = (length + 1) + "={id}"
 
-    const path = PublicPathsEnum.GALLERY + imageId + media.name
+    const folder = PublicPathsEnum.GALLERY + imageId + media.name
 
-    const fileExists = fs.existsSync(path)
+    const dir = path.resolve('./public', folder);    
+
+    const fileExists = fs.existsSync(dir)
 
     if (fileExists) return NextResponse.json({ message: "Essa mídia já foi adicionada" })
 
-    fs.writeFileSync(path, bufferImage)
+    fs.writeFileSync(dir, bufferImage)
 
     return NextResponse.json({ message: "Mídia adicionada com sucesso" })
 }
@@ -40,9 +45,11 @@ export async function DELETE(req: Request) {
     
     const media = form.get("media")
 
-    const path = PublicPathsEnum.GALLERY + media
+    const folder = PublicPathsEnum.GALLERY + media
 
-    fs.rmSync(path)
+    const dir = path.resolve('./public', folder);    
+
+    fs.rmSync(dir)
 
     return NextResponse.json({ message: "Mídia removida com sucesso" })
 }

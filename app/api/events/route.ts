@@ -27,13 +27,15 @@ export async function POST(req: Request) {
     const { length } = fs.readdirSync(PublicPathsEnum.EVENTS)
     const imageId = (length + 1) + "={id}"
 
-    const path = PublicPathsEnum.EVENTS + imageId + eventImage.name
+    const folder = PublicPathsEnum.EVENTS + imageId + eventImage.name
 
-    const fileExists = fs.existsSync(path)
+    const dir = path.resolve('./public', folder);    
+
+    const fileExists = fs.existsSync(dir)
 
     if (fileExists) return NextResponse.json({ message: "Esse evento já foi adicionado" })
 
-    fs.writeFileSync(path, bufferImage)
+    fs.writeFileSync(dir, bufferImage)
 
     return NextResponse.json({ message: "Evento adicionado com sucesso" })
 }
@@ -44,9 +46,10 @@ export async function DELETE(req: Request) {
     
     const event = form.get("event")
 
-    const path = PublicPathsEnum.EVENTS + event
+    const folder = PublicPathsEnum.EVENTS + event
+    const dir = path.resolve('./public', folder);    
 
-    fs.rmSync(path)
+    fs.rmSync(dir)
 
     return NextResponse.json({ message: "Evento removido com sucesso" })
 }
