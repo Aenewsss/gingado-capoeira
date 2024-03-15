@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server"
 import fs from "fs"
+import path from "path"
 import { PublicPathsEnum } from "@/app/enums/public-paths.enum"
+import getConfig from "next/config"
 
 export function GET() {
-    const path = PublicPathsEnum.EVENTS
 
-    const events = fs.readdirSync(path).reverse()
+    const { serverRuntimeConfig } = getConfig()
+
+    const folder = PublicPathsEnum.EVENTS
+  
+    const dir = path.join(serverRuntimeConfig.PROJECT_ROOT, './public', folder);    
+
+    const events = fs.readdirSync(dir).reverse()
 
     if (!events.length) return NextResponse.json({ events, message: "Nenhum evento adicionado" })
 

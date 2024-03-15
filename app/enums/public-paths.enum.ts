@@ -1,4 +1,4 @@
 export enum PublicPathsEnum {
-    EVENTS = "/eventos/",
-    GALLERY = "/galeria/"
+    EVENTS = "eventos/",
+    GALLERY = "galeria/"
 }
