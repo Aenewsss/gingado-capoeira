@@ -1,5 +1,3 @@
-"use server"
-
 import { environments } from "@/environments";
 import { IEventsResponse } from "../interfaces";
 import { TagsEnum } from "../enums/tags.enum";
