@@ -6,7 +6,7 @@ import { TagsEnum } from "../enums/tags.enum"
 
 export async function addEvent(prevState: any, form: FormData) {
 
-    const { message } = await (await fetch(`http://localhost:3000/api/events`,
+    const { message } = await (await fetch(`${environments.API_URL}/events`,
         {
             method: 'POST',
             body: form

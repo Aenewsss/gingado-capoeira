@@ -1,11 +1,24 @@
+"use client"
+
 import getEvents from "@/app/actions/get-events.action"
 import AddEvent from "@/app/components/AddEvent"
 import EventsList from "@/app/components/EventsList"
+import { IEventsResponse } from "@/app/interfaces"
 import Link from "next/link"
+import { useEffect, useState } from "react";
 export default async function Events() {
 
-    const { events, message } = await getEvents()
+    const [events, setEvents] = useState<string[]>([]);
+    const [message, setMessage] = useState<string>('');
 
+    useEffect(() => {
+        async function fetchEvents() {
+            const { events, message} = await getEvents()
+            setEvents(events)
+            setMessage(message)
+        }
+        fetchEvents()
+    }, []);
     return (
         <main className="my-10 flex flex-col items-center justify-center gap-10">
             <h1 className="text-5xl text-center">Eventos Gingado Capoeira</h1>

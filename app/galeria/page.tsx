@@ -1,3 +1,5 @@
+"use client"
+
 import Image from "next/image";
 import getMedia from "../actions/get-media.action";
 import Top from "../sections/Top";
@@ -5,10 +7,22 @@ import { isVideo } from "../utils/is-video.util";
 import { resolveImagePath } from "../utils/resolve-image-path.util";
 import { TypeImageEnum } from "../enums/type-image.enum";
 import Footer from "../components/Footer";
+import { useEffect, useState } from "react";
 
 export default async function Gallery() {
 
-    const { media: medias, message } = await getMedia()
+
+    const [medias, setMedia] = useState<string[]>([]);
+    const [message, setMessage] = useState<string>('');
+
+    useEffect(() => {
+        async function fetchMedia() {
+            const { media: medias, message} = await getMedia()
+            setMedia(medias)
+            setMessage(message)
+        }
+        fetchMedia()
+    }, []);
 
     function renderMedia(mediaSrc: string, index: number) {
         if (isVideo(mediaSrc)) return <video key={index} controls className="object-cover bg-gray-300" width={300} height={300} src={resolveImagePath(mediaSrc, TypeImageEnum.GALLERY)}></video>

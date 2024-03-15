@@ -1,3 +1,5 @@
+"use client"
+
 import Image from "next/image";
 import Top from "../sections/Top";
 import { isVideo } from "../utils/is-video.util";
@@ -5,10 +7,20 @@ import { resolveImagePath } from "../utils/resolve-image-path.util";
 import { TypeImageEnum } from "../enums/type-image.enum";
 import getEvents from "../actions/get-events.action";
 import Footer from "../components/Footer";
+import { useEffect, useState } from "react";
+import { IEventsResponse } from "../interfaces";
 
-export default async function Gallery() {
+export default function Gallery() {
 
-    const { events, message } = await getEvents()
+    const [events, setEvents] = useState<string[]>([]);
+
+    useEffect(() => {
+        async function fetchEvents() {
+            const { events } = await getEvents()
+            setEvents(events)
+        }
+        fetchEvents()
+    }, []);
 
     return (
         <main>

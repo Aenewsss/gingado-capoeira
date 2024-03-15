@@ -1,13 +1,23 @@
+"use client"
+
 import Image from "next/image";
 import getEvents from "../actions/get-events.action";
 import { resolveImagePath } from "../utils/resolve-image-path.util";
 import { TypeImageEnum } from "../enums/type-image.enum";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default async function Events() {
 
-    const { events, message } = await getEvents()
+    const [events, setEvents] = useState<string[]>([]);
 
+    useEffect(() => {
+        async function fetchEvents() {
+            const { events } = await getEvents()
+            setEvents(events)
+        }
+        fetchEvents()
+    }, []);
     return (
         <section className="pt-20 bg-white flex justify-center flex-col" id="eventos">
             <h2 className="text-4xl lg:text-6xl text-center text-blue-950">Próximos Eventos</h2>
