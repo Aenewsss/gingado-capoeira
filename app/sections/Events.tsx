@@ -7,7 +7,7 @@ import { TypeImageEnum } from "../enums/type-image.enum";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-export default async function Events() {
+export default function Events() {
 
     const [events, setEvents] = useState<string[]>([]);
 

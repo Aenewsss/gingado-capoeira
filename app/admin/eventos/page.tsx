@@ -6,7 +6,7 @@ import EventsList from "@/app/components/EventsList"
 import { IEventsResponse } from "@/app/interfaces"
 import Link from "next/link"
 import { useEffect, useState } from "react";
-export default async function Events() {
+export default function Events() {
 
     const [events, setEvents] = useState<string[]>([]);
     const [message, setMessage] = useState<string>('');

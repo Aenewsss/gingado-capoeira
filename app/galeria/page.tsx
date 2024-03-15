@@ -9,7 +9,7 @@ import { TypeImageEnum } from "../enums/type-image.enum";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
 
-export default async function Gallery() {
+export default function Gallery() {
 
 
     const [medias, setMedia] = useState<string[]>([]);

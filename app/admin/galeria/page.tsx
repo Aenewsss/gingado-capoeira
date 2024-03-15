@@ -6,7 +6,7 @@ import MediaList from "@/app/components/MediaList"
 import Link from "next/link"
 import { useEffect, useState } from "react";
 
-export default async function Gallery() {
+export default function Gallery() {
 
     const [medias, setMedia] = useState<string[]>([]);
     const [message, setMessage] = useState<string>('');

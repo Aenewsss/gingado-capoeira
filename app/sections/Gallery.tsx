@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default async function Gallery() {
+export default function Gallery() {
 
     return (
         <section className="pt-20 bg-white flex justify-center flex-col" id="galeria">
