@@ -6,7 +6,7 @@ import { TagsEnum } from "../enums/tags.enum"
 
 export async function addMedia(prevState: any, form: FormData) {
 
-    const { message } = await (await fetch(`${environments.API_URL}/gallery`,
+    const { message } = await (await fetch(`${process.env.NEXT_PUBLIC_API_DEV_URL}/gallery`,
         {
             method: 'POST',
             body: form

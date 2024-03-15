@@ -26,7 +26,7 @@ export default async function Gallery() {
             {(!medias || medias.length == 0) && <p>Nenhuma mídia adicionada até o momento</p>}
 
                 {
-                    medias.map((media, index) =>
+                    medias.map((media:any, index:any) =>
                         renderMedia(media, index)
                     )
                 }
