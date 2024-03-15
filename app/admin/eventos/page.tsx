@@ -8,9 +8,9 @@ export default async function Events() {
 
     return (
         <main className="my-10 flex flex-col items-center justify-center gap-10">
-            <h1 className="text-5xl">Eventos Gingado Capoeira</h1>
+            <h1 className="text-5xl text-center">Eventos Gingado Capoeira</h1>
 
-            <div className="px-2 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-wrap gap-4 w-full">
+            <div className="px-2 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-wrap gap-4 w-full sm:justify-normal justify-center">
                 <AddEvent />
                 {
                     !events.length

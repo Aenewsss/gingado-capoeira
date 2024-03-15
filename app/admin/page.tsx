@@ -6,7 +6,7 @@ export default function Admin() {
         <main className="h-screen flex flex-col items-center justify-center gap-10">
             <h1 className="text-5xl">Área do Administrador</h1>
 
-            <div className="flex flex-wrap gap-10">
+            <div className="flex flex-wrap gap-10 justify-center">
                 <Link href="/admin/eventos" className="max-w-96 pb-8 rounded bg-blue-950 flex flex-col gap-6 hover:scale-105 hover:transition-all">
                     <Image className="object-cover h-56" unoptimized width={500} height={500} src="/admin-eventos.jpeg" alt="Banner Galeria" />
                     <div className="px-6">
