@@ -6,8 +6,8 @@ import { PublicPathsEnum } from "@/app/enums/public-paths.enum"
 export function GET() {
 
     const folder = PublicPathsEnum.EVENTS
-  
-    const dir = path.resolve('./public', folder);    
+
+    const dir = path.resolve('./public', folder);
 
     const events = fs.readdirSync(dir).reverse()
 
@@ -24,12 +24,12 @@ export async function POST(req: Request) {
 
     const bufferImage = Buffer.from(await eventImage.arrayBuffer())
 
-    const { length } = fs.readdirSync(PublicPathsEnum.EVENTS)
+    const { length } = fs.readdirSync(path.resolve('./public', PublicPathsEnum.EVENTS))
     const imageId = (length + 1) + "={id}"
 
     const folder = PublicPathsEnum.EVENTS + imageId + eventImage.name
 
-    const dir = path.resolve('./public', folder);    
+    const dir = path.resolve('./public', folder);
 
     const fileExists = fs.existsSync(dir)
 
@@ -43,11 +43,11 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
 
     const form = await req.formData()
-    
+
     const event = form.get("event")
 
     const folder = PublicPathsEnum.EVENTS + event
-    const dir = path.resolve('./public', folder);    
+    const dir = path.resolve('./public', folder);
 
     fs.rmSync(dir)
 

@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     const bufferImage = Buffer.from(await media.arrayBuffer())
 
-    const { length } = fs.readdirSync(PublicPathsEnum.GALLERY)
+    const { length } = fs.readdirSync(path.resolve('./public',PublicPathsEnum.GALLERY))
     const imageId = (length + 1) + "={id}"
 
     const folder = PublicPathsEnum.GALLERY + imageId + media.name
