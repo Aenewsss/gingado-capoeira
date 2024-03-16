@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
     const newImagePath = `public/${folder}`
     
-    fs.writeFileSync(newImagePath, bufferImage)
+    fs.writeFile(newImagePath, bufferImage, (err) => { if (err) console.error(err) })
 
     return NextResponse.json({ message: "Mídia adicionada com sucesso" })
 }
