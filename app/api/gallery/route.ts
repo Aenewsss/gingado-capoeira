@@ -6,7 +6,7 @@ import path from "path";
 export function GET() {
     const folder = PublicPathsEnum.GALLERY
 
-    const dir = path.resolve('./public', folder);    
+    const dir = path.resolve('./public', folder);
 
     const media = fs.readdirSync(dir).filter(el => el != "home").reverse()
 
@@ -23,18 +23,20 @@ export async function POST(req: Request) {
 
     const bufferImage = Buffer.from(await media.arrayBuffer())
 
-    const { length } = fs.readdirSync(path.resolve('./public',PublicPathsEnum.GALLERY))
+    const length = fs.readdirSync(path.resolve('./public', PublicPathsEnum.GALLERY)).length - 1
     const imageId = (length + 1) + "={id}"
 
     const folder = PublicPathsEnum.GALLERY + imageId + media.name
 
-    const dir = path.resolve('./public', folder);    
+    const dir = path.resolve('./public', folder);
 
     const fileExists = fs.existsSync(dir)
 
     if (fileExists) return NextResponse.json({ message: "Essa mídia já foi adicionada" })
 
-    fs.writeFileSync(dir, bufferImage)
+    const newImagePath = `public/galeria/${folder}`
+    
+    fs.writeFileSync(newImagePath, bufferImage)
 
     return NextResponse.json({ message: "Mídia adicionada com sucesso" })
 }
@@ -42,12 +44,12 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
 
     const form = await req.formData()
-    
+
     const media = form.get("media")
 
     const folder = PublicPathsEnum.GALLERY + media
 
-    const dir = path.resolve('./public', folder);    
+    const dir = path.resolve('./public', folder);
 
     fs.rmSync(dir)
 
