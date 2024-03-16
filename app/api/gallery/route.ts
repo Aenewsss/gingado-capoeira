@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     if (fileExists) return NextResponse.json({ message: "Essa mídia já foi adicionada" })
 
-    const newImagePath = `public/galeria/${folder}`
+    const newImagePath = `public/${folder}`
     
     fs.writeFileSync(newImagePath, bufferImage)
 
