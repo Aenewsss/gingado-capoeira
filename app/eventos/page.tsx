@@ -31,7 +31,7 @@ export default function Gallery() {
             <section className=" px-2 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-wrap gap-10 justify-center">
                 {
                     events.map((event, index) =>
-                        <Image key={index} className="w-auto" width={500} height={500} src={resolveImagePath(event, TypeImageEnum.EVENT)} unoptimized alt="Evento 1" />
+                        <Image key={index} className="object-fit-contain" width={500} height={500} src={resolveImagePath(event, TypeImageEnum.EVENT)} unoptimized alt="Evento 1" />
                     )
                 }
             </section>
