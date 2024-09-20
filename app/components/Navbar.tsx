@@ -10,6 +10,7 @@ const navigation = [
     { name: 'Graduação', href: '/#sistema', current: false },
     { name: 'Eventos', href: '/#eventos', current: false },
     { name: 'Galeria', href: '/#galeria', current: false },
+    { name: 'Modelo T.A', href: '/modelo-transparencia-ativa', current: false },
     { name: 'Nossa Sede', href: '/#sede', current: true },
 ]
 
