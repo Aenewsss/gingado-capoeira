@@ -11,6 +11,7 @@ const navigation = [
     { name: 'Eventos', href: '/#eventos', current: false },
     { name: 'Galeria', href: '/#galeria', current: false },
     { name: 'Nossa Sede', href: '/#sede', current: true },
+    { name: 'Transparência', href: '/transparencia', current: false },
 ]
 
 function classNames(...classes: string[]) {
