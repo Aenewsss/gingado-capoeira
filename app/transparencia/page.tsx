@@ -14,9 +14,9 @@ export default function Page() {
         
             <section className="flex flex-col items-center justify-center mb-10">
 
-                <Image quality={100} className="mb-6 md:w-auto w-full" src="/logo-transparencia.jpeg" width={400} height={400} alt="Grupo logo" />
-                <Image quality={100} className="mb-6 w-full md:w-3/4" src="/192.jpeg" width={400} height={300} alt="Grupo logo" />
-                <Image quality={100} className="mb-6 w-full md:w-3/4" src="/300.jpeg" width={400} height={300} alt="Grupo logo" />
+                <Image unoptimized quality={100} className="mb-6 md:w-auto w-full" src="/logo-transparencia.jpeg" width={400} height={400} alt="Grupo logo" />
+                <Image unoptimized quality={100} className="mb-6 w-full md:w-3/4" src="/192.jpeg" width={400} height={300} alt="Grupo logo" />
+                <Image unoptimized quality={100} className="mb-6 w-full md:w-3/4" src="/300.jpeg" width={400} height={300} alt="Grupo logo" />
 
                 <Link className="text-xl mt-4 px-4 text-center text-blue-500" href="/gingado-capoeira.xlsx" download>Clicar e fazer o download da planilha</Link>
 
