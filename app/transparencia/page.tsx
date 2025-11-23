@@ -11,10 +11,11 @@ export default function Page() {
 
             <h1 className="text-center md:text-5xl text-3xl my-10 px-4">Transparência | Recursos recebidos</h1>
 
-        
+
             <section className="flex flex-col items-center justify-center mb-10">
 
-                <Image style={{maxHeight: 800}} unoptimized quality={100} className="mb-6 md:w-auto w-full" src="/logo-transparencia.jpeg" width={400} height={400} alt="Grupo logo" />
+                <Image style={{ maxHeight: 800 }} unoptimized quality={100} className="mb-6 md:w-auto w-full" src="/logo-transparencia.jpeg" width={400} height={400} alt="Grupo logo" />
+                <Image className="mb-6 w-full md:w-3/4" width={600} height={300} alt="modelo de transparência ativa 2" src="/modelo-transparencia2.jpeg" />
                 <Image unoptimized quality={100} className="mb-6 w-full md:w-3/4" src="/192.jpeg" width={400} height={300} alt="Grupo logo" />
                 <Image unoptimized quality={100} className="mb-6 w-full md:w-3/4" src="/300.jpeg" width={400} height={300} alt="Grupo logo" />
 
