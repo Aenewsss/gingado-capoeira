@@ -22,6 +22,21 @@
   scroll-behavior: smooth !important;
 }
 
+/* Lenis (rolagem suave da home) controla a rolagem; o smooth do CSS precisa sair para não brigar com ele. */
+html.lenis,
+html.lenis * {
+  scroll-behavior: auto !important;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
 /* As animações de entrada lateral (Reveal fade-left/right) não podem criar rolagem horizontal. */
 html,
 body {
@@ -60,6 +75,8 @@ body {
 .reveal[data-variant="fade-right"] { transform: translateX(64px); }
 .reveal[data-variant="scale"] { transform: scale(0.88); }
 .reveal[data-variant="clip"] { clip-path: inset(0 100% 0 0); opacity: 1; }
+/* Títulos: o texto sobe de dentro de uma "máscara" (revelação editorial). */
+.reveal[data-variant="mask"] { clip-path: inset(0 0 100% 0); transform: translateY(32px); opacity: 1; }
 
 .reveal[data-visible="true"] {
   opacity: 1;
@@ -122,6 +139,16 @@ body {
 @keyframes scroll-cue {
   0%, 100% { transform: translateY(0); opacity: 0.4; }
   50% { transform: translateY(10px); opacity: 1; }
+}
+
+/* ---------- Lightbox ---------- */
+@keyframes lightbox-in {
+  from { opacity: 0; }
+}
+
+::view-transition-group(cartaz-evento) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ---------- Event card tilt ---------- */

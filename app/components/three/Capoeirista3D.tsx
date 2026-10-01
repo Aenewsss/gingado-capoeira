@@ -2,9 +2,11 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { ContactShadows, Environment, Lightformer, useGLTF } from "@react-three/drei";
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { GLTF } from "three-stdlib";
 import * as THREE from "three";
 import { useInView } from "@/app/hooks/useInView";
+import { useAdaptiveDpr } from "./AdaptiveQuality";
 import { MOVIMENTOS } from "@/app/data/movimentos";
 
 /** Personagem (com textura) e o movimento "palhaço". */
@@ -109,28 +111,38 @@ function retargetClip(clip: THREE.AnimationClip, sourceRoot: THREE.Object3D, tar
     return new THREE.AnimationClip(name, clip.duration, tracks)
 }
 
+/** Carrega os movimentos extras em segundo plano; a ginga já roda enquanto eles chegam. */
+function MovesLoader({ onLoaded }: { onLoaded: (sources: GLTF[]) => void }) {
+    const sources = useGLTF(MOVE_URLS)
+    useEffect(() => onLoaded(sources), [sources, onLoaded])
+    return null
+}
+
 function Capoeirista() {
     const groupRef = useRef<THREE.Group>(null)
     const rootLockRef = useRef<THREE.Group>(null)
     const character = useGLTF(CHARACTER_URL)
     const gingaSource = useGLTF(GINGA_URL)
-    const moveSources = useGLTF(MOVE_URLS)
+    const [extraClips, setExtraClips] = useState<THREE.AnimationClip[]>([])
 
-    const { mixer, ginga, moves } = useMemo(() => {
+    const { mixer, ginga } = useMemo(() => {
         const mixer = new THREE.AnimationMixer(character.scene)
         const ginga = mixer.clipAction(retargetClip(gingaSource.animations[0], gingaSource.scene, character.scene, "ginga"))
-        const clips = [
-            ...character.animations,
-            ...moveSources.map((source, index) => retargetClip(source.animations[0], source.scene, character.scene, MOVIMENTOS[index])),
-        ]
-        const moves = clips.map(clip => {
-            const action = mixer.clipAction(clip)
-            action.setLoop(THREE.LoopOnce, 1)
-            action.clampWhenFinished = true
-            return action
-        })
-        return { mixer, ginga, moves }
-    }, [character, gingaSource, moveSources])
+        return { mixer, ginga }
+    }, [character, gingaSource])
+
+    const onMovesLoaded = useCallback((sources: GLTF[]) => {
+        setExtraClips(sources.map((source, index) => retargetClip(source.animations[0], source.scene, character.scene, MOVIMENTOS[index])))
+    }, [character])
+
+    /** O rodízio lê a lista por ref: os movimentos entram conforme carregam, sem reiniciar a ginga. */
+    const movesRef = useRef<THREE.AnimationAction[]>([])
+    movesRef.current = useMemo(() => [...character.animations, ...extraClips].map(clip => {
+        const action = mixer.clipAction(clip)
+        action.setLoop(THREE.LoopOnce, 1)
+        action.clampWhenFinished = true
+        return action
+    }), [character, extraClips, mixer])
 
     /** Normaliza o tamanho pelo esqueleto em repouso e apoia os pés no chão (y = 0). */
     const { scale, offset } = useMemo(() => {
@@ -163,6 +175,7 @@ function Capoeirista() {
         ginga.reset().play()
 
         function onLoop(event: { action: THREE.AnimationAction }) {
+            const moves = movesRef.current
             if (event.action !== ginga || moves.length === 0) return
             gingaLoops += 1
             if (gingaLoops < GINGA_LOOPS_BETWEEN_MOVES) return
@@ -173,7 +186,7 @@ function Capoeirista() {
         }
 
         function onFinished(event: { action: THREE.AnimationAction }) {
-            if (!moves.includes(event.action)) return
+            if (!movesRef.current.includes(event.action)) return
             ginga.reset().play()
             event.action.crossFadeTo(ginga, CROSSFADE_SECONDS, false)
         }
@@ -185,7 +198,7 @@ function Capoeirista() {
             mixer.removeEventListener("finished", onFinished)
             mixer.stopAllAction()
         }
-    }, [mixer, ginga, moves])
+    }, [mixer, ginga])
 
     const hipsPosition = useMemo(() => new THREE.Vector3(), [])
     const bonePosition = useMemo(() => new THREE.Vector3(), [])
@@ -223,6 +236,9 @@ function Capoeirista() {
 
     return (
         <group ref={groupRef}>
+            <Suspense fallback={null}>
+                <MovesLoader onLoaded={onMovesLoaded} />
+            </Suspense>
             <group ref={rootLockRef}>
                 <primitive object={character.scene} scale={scale} position={offset} />
             </group>
@@ -232,17 +248,21 @@ function Capoeirista() {
 
 export default function Capoeirista3D({ className = "" }: { className?: string }) {
     const wrapperRef = useRef<HTMLDivElement>(null)
+    const { dpr, monitor } = useAdaptiveDpr()
     const visible = useInView(wrapperRef, { once: false, rootMargin: "0px" })
+    /** Só monta a cena (e baixa os modelos) quando a faixa está chegando na tela. */
+    const near = useInView(wrapperRef, { rootMargin: "400px 0px" })
 
     return (
         <div ref={wrapperRef} className={className}>
-            <Canvas
+            {near && <Canvas
                 frameloop={visible ? "always" : "demand"}
-                dpr={[1, 1.75]}
+                dpr={dpr}
                 camera={{ position: [0, 1.35, 5], fov: 35 }}
                 gl={{ antialias: true, alpha: true }}
                 onCreated={({ camera }) => camera.lookAt(0, 1.2, 0)}
             >
+                {monitor}
                 <ambientLight intensity={1.1} />
                 <directionalLight position={[0, 2, 5]} intensity={1.2} />
                 <directionalLight position={[2, 4, 3]} intensity={2.6} />
@@ -253,11 +273,7 @@ export default function Capoeirista3D({ className = "" }: { className?: string }
                 <Environment resolution={128}>
                     <Lightformer intensity={1.2} position={[0, 4, 3]} scale={[6, 3, 1]} />
                 </Environment>
-            </Canvas>
+            </Canvas>}
         </div>
     )
 }
-
-useGLTF.preload(CHARACTER_URL)
-useGLTF.preload(GINGA_URL)
-useGLTF.preload(MOVE_URLS)

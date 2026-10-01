@@ -146,7 +146,7 @@ export default function MusicPlayer() {
                     )}
                 </div>
 
-                <ol className="max-h-56 overflow-y-auto py-1">
+                <ol data-lenis-prevent className="max-h-56 overflow-y-auto py-1">
                     {FILA.map((item, indice) => item.album === ALBUNS.find(album => album.id === albumAberto)?.titulo &&
                         <li key={item.videoId}>
                             <button

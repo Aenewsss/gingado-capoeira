@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { CORES, Graduacao } from "@/app/data/graduacoes";
 import { useInView } from "@/app/hooks/useInView";
+import { useAdaptiveDpr } from "./AdaptiveQuality";
 
 const ROPE_RADIUS = 0.055
 const ROPE_LENGTH = 2.5
@@ -362,6 +363,7 @@ interface Tooltip {
 
 export default function Corda3D({ graduacoes, selected, gapAt, onSelect, isZoomed }: IProps) {
     const wrapperRef = useRef<HTMLDivElement>(null)
+    const { dpr, monitor } = useAdaptiveDpr()
     const visible = useInView(wrapperRef, { once: false, rootMargin: "0px" })
     const [tooltip, setTooltip] = useState<Tooltip | null>(null)
 
@@ -378,11 +380,12 @@ export default function Corda3D({ graduacoes, selected, gapAt, onSelect, isZoome
         <div ref={wrapperRef} className="relative w-full h-full" style={{ cursor: tooltip ? "pointer" : "default" }}>
             <Canvas
                 frameloop={visible ? "always" : "demand"}
-                dpr={[1, 1.75]}
+                dpr={dpr}
                 camera={{ position: [-3, 1, 6], fov: 40 }}
                 gl={{ antialias: true, alpha: true }}
                 onPointerMissed={() => setTooltip(null)}
             >
+                {monitor}
                 <ambientLight intensity={0.75} />
                 <directionalLight position={[-2, 4, 5]} intensity={2.2} />
                 <directionalLight position={[4, 1, 2]} intensity={0.6} color="#93c5fd" />

@@ -5,7 +5,7 @@ import { MouseEvent, ReactNode, useRef } from "react";
 interface IProps {
     children: ReactNode
     className?: string
-    onClick?: () => void
+    onClick?: (card: HTMLButtonElement) => void
 }
 
 const MAX_TILT_DEG = 8
@@ -27,7 +27,7 @@ export default function TiltCard({ children, className = "", onClick }: IProps) 
     }
 
     return (
-        <button ref={ref} type="button" onClick={onClick} onMouseMove={handleMove} onMouseLeave={handleLeave} className={`tilt-card block ${className}`}>
+        <button ref={ref} type="button" onClick={event => onClick?.(event.currentTarget)} onMouseMove={handleMove} onMouseLeave={handleLeave} className={`tilt-card block ${className}`}>
             {children}
         </button>
     )

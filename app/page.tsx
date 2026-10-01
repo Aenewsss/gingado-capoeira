@@ -5,9 +5,11 @@ import Footer from "./components/Footer";
 import Events from "./sections/Events";
 import Gallery from "./sections/Gallery";
 import Headquarters from "./sections/Headquarters";
+import InstagramCta from "./sections/InstagramCta";
 import ModeloTA from "./sections/ModeloTA";
 import Marquee from "./components/Marquee";
 import MusicPlayer from "./components/MusicPlayer";
+import SmoothScroll from "./components/SmoothScroll";
 
 export default function Home() {
   return (
@@ -20,8 +22,10 @@ export default function Home() {
       <ModeloTA />
       <Gallery />
       <Headquarters />
+      <InstagramCta />
       <Footer />
       <MusicPlayer />
+      <SmoothScroll />
     </main>
   );
 }

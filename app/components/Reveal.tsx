@@ -3,7 +3,7 @@
 import { ElementType, ReactNode, useRef } from "react";
 import { useInView } from "../hooks/useInView";
 
-type RevealVariant = "fade-up" | "fade-left" | "fade-right" | "scale" | "clip"
+type RevealVariant = "fade-up" | "fade-left" | "fade-right" | "scale" | "clip" | "mask"
 
 interface IProps {
     children: ReactNode

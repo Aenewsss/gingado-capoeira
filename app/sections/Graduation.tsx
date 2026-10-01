@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { CORES, GRADUACOES_ADULTO, GRADUACOES_INFANTIL, Graduacao } from "../data/graduacoes";
+import { useInView } from "../hooks/useInView";
 
 const Corda3D = dynamic(() => import("../components/three/Corda3D"), {
     ssr: false,
@@ -21,8 +22,8 @@ const PASSOS = (Object.keys(SISTEMAS) as Sistema[]).flatMap(sistema =>
     SISTEMAS[sistema].graduacoes.map((_, index) => ({ sistema, index }))
 )
 
-/** Quanto a página rola (em vh) para avançar uma corda (apenas no Desktop). */
-const VH_POR_CORDA = 16
+/** Tempo de cada corda na apresentação automática. */
+const MS_POR_CORDA = 3000
 
 /** Todas as cordas num varal só, na mesma ordem dos passos (infantil e depois adulto). */
 const TODAS_AS_CORDAS = PASSOS.map(({ sistema, index }) => SISTEMAS[sistema].graduacoes[index])
@@ -50,14 +51,16 @@ function Swatch({ graduacao }: { graduacao: Graduacao }) {
 
 export default function Graduation() {
     const [passo, setPasso] = useState(0)
-    const [isDesktop, setIsDesktop] = useState(false)
     
     // Estados para controle de animação e zoom no mobile
     const [isZoomed, setIsZoomed] = useState(false) // Começa em Zoom Out no mobile
-    const [isPlaying, setIsPlaying] = useState(true) // Animação automática no mobile
+    const [isPlaying, setIsPlaying] = useState(true) // Apresentação automática até a pessoa escolher uma corda
 
     const sectionRef = useRef<HTMLElement>(null)
     const listRef = useRef<HTMLOListElement>(null)
+    const cardRef = useRef<HTMLDivElement>(null)
+    /** A apresentação das cordas (e o 3D) só começa quando a pessoa chega na seção. */
+    const chegouNaSecao = useInView(cardRef, { rootMargin: "0px 0px -25% 0px" })
 
     const { sistema, index: selected } = PASSOS[passo]
     const { graduacoes } = SISTEMAS[sistema]
@@ -66,9 +69,7 @@ export default function Graduation() {
     /** Identifica o tamanho da tela (Desktop vs Mobile) */
     useEffect(() => {
         function checkDesktop() {
-            const desktop = window.innerWidth >= 1024
-            setIsDesktop(desktop)
-            if (desktop) {
+            if (window.innerWidth >= 1024) {
                 setIsZoomed(true) // No desktop mantemos o zoom padrão
             }
         }
@@ -77,11 +78,13 @@ export default function Graduation() {
         return () => window.removeEventListener("resize", checkDesktop)
     }, [])
 
-    /** Animação automática no Mobile: Começa em zoom out e depois vai trocando de corda */
+    /**
+     * Apresentação automática (desktop e mobile), só depois que a pessoa chega na seção.
+     * No mobile começa em zoom out e aproxima depois de 2s.
+     */
     useEffect(() => {
-        if (isDesktop || !isPlaying) return
+        if (!isPlaying || !chegouNaSecao) return
 
-        // Após 2s no início, aplica o zoom in nas cordas
         const zoomTimeout = setTimeout(() => {
             setIsZoomed(true)
         }, 2000)
@@ -89,35 +92,13 @@ export default function Graduation() {
         // Alterna para a próxima corda a cada 3 segundos
         const interval = setInterval(() => {
             setPasso(prev => (prev + 1) % PASSOS.length)
-        }, 3000)
+        }, MS_POR_CORDA)
 
         return () => {
             clearTimeout(zoomTimeout)
             clearInterval(interval)
         }
-    }, [isDesktop, isPlaying])
-
-    /** A rolagem da página altera o passo SOMENTE no Desktop */
-    useEffect(() => {
-        function onScroll() {
-            if (window.innerWidth < 1024) return
-
-            const section = sectionRef.current
-            if (!section) return
-            const rect = section.getBoundingClientRect()
-            const scrollable = rect.height - window.innerHeight
-            if (scrollable <= 0) return
-            const progress = Math.min(Math.max(-rect.top / scrollable, 0), 1)
-            setPasso(Math.min(Math.floor(progress * PASSOS.length), PASSOS.length - 1))
-        }
-        onScroll()
-        window.addEventListener("scroll", onScroll, { passive: true })
-        window.addEventListener("resize", onScroll)
-        return () => {
-            window.removeEventListener("scroll", onScroll)
-            window.removeEventListener("resize", onScroll)
-        }
-    }, [])
+    }, [isPlaying, chegouNaSecao])
 
     /** Mantém a corda da vez visível na lista lateral (desktop). */
     useEffect(() => {
@@ -127,15 +108,10 @@ export default function Graduation() {
         list.scrollTo({ top: item.offsetTop - list.clientHeight / 2 + item.clientHeight / 2, behavior: "smooth" })
     }, [selected, sistema])
 
+    /** Qualquer escolha manual (lista, abas, setas ou clique na corda) pausa a apresentação automática. */
     function irParaPasso(passoAlvo: number) {
-        if (window.innerWidth < 1024) {
-            setPasso(passoAlvo)
-            return
-        }
-        const section = sectionRef.current
-        if (!section) return
-        const scrollable = section.offsetHeight - window.innerHeight
-        window.scrollTo({ top: section.offsetTop + ((passoAlvo + 0.5) / PASSOS.length) * scrollable })
+        setIsPlaying(false)
+        setPasso(Math.min(Math.max(passoAlvo, 0), PASSOS.length - 1))
     }
 
     function irPara(sistemaAlvo: Sistema, index: number) {
@@ -147,9 +123,8 @@ export default function Graduation() {
             ref={sectionRef}
             className="relative bg-white overflow-x-clip"
             id="sistema"
-            style={isDesktop ? { height: `calc(100vh + ${PASSOS.length * VH_POR_CORDA}vh)` } : undefined}
         >
-            <div className="lg:sticky lg:top-0 lg:h-screen h-auto flex flex-col justify-center pt-12 lg:pt-24 pb-6">
+            <div className="flex flex-col justify-center py-12 lg:py-24">
                 <div className="px-4 text-center">
                     <p className="text-sm tracking-[0.3em] uppercase text-red-600">Cordas e ponteiras</p>
                     <h2 className="mt-1 text-3xl lg:text-5xl text-blue-950">Sistema de Graduação</h2>
@@ -170,24 +145,25 @@ export default function Graduation() {
                 </div>
 
                 <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-5 grid lg:grid-cols-3 gap-8 items-center min-h-0">
-                    <div className="lg:col-span-2 relative h-[min(500px,calc(100vh-17rem))] sm:h-[min(620px,calc(100vh-17rem))] rounded-3xl bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#e8ecf6_60%,#d7deef_100%)] ring-1 ring-blue-950/10 shadow-inner overflow-hidden">
+                    <div ref={cardRef} className="lg:col-span-2 relative h-[min(500px,calc(100vh-17rem))] sm:h-[min(620px,calc(100vh-17rem))] rounded-3xl bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#e8ecf6_60%,#d7deef_100%)] ring-1 ring-blue-950/10 shadow-inner overflow-hidden">
                         
                         {/* No Mobile, desativa totalmente a captura de eventos de ponteiro para o scroll rolar solto */}
                         <div className="w-full h-full pointer-events-none lg:pointer-events-auto">
-                            <Corda3D 
-                                graduacoes={TODAS_AS_CORDAS} 
-                                selected={passo} 
-                                gapAt={INICIO_ADULTO} 
-                                onSelect={irParaPasso} 
+                            {/* Monta o 3D só ao chegar na seção: o voo inicial da câmera acontece na frente da pessoa. */}
+                            {chegouNaSecao && <Corda3D
+                                graduacoes={TODAS_AS_CORDAS}
+                                selected={passo}
+                                gapAt={INICIO_ADULTO}
+                                onSelect={irParaPasso}
                                 isZoomed={isZoomed}
-                            />
+                            />}
                         </div>
 
-                        {/* Botões de controle no Mobile: Zoom e Play/Pause */}
-                        <div className="lg:hidden absolute right-4 top-4 z-20 flex gap-2">
+                        {/* Controles: zoom (só mobile) e play/pause */}
+                        <div className="absolute right-4 top-4 z-20 flex gap-2">
                             <button
                                 onClick={() => setIsZoomed(z => !z)}
-                                className="px-3 py-1.5 rounded-xl bg-white/90 backdrop-blur shadow text-xs font-semibold text-blue-950 active:scale-95 transition-all"
+                                className="lg:hidden px-3 py-1.5 rounded-xl bg-white/90 backdrop-blur shadow text-xs font-semibold text-blue-950 active:scale-95 transition-all"
                             >
                                 {isZoomed ? "🔍 Zoom Out" : "🔍 Zoom In"}
                             </button>
@@ -200,20 +176,20 @@ export default function Graduation() {
                             </button>
                         </div>
 
-                        {/* Botões de navegação lateral (Anterior / Próximo) no Mobile */}
+                        {/* Setas de navegação (anterior / próxima) */}
                         <button
-                            onClick={() => { setIsPlaying(false); setPasso(p => Math.max(0, p - 1)); }}
+                            onClick={() => irParaPasso(passo - 1)}
                             disabled={passo === 0}
                             aria-label="Corda anterior"
-                            className="lg:hidden absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 shadow-md text-blue-950 flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition-all"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 shadow-md text-blue-950 flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition-all"
                         >
                             ‹
                         </button>
                         <button
-                            onClick={() => { setIsPlaying(false); setPasso(p => Math.min(PASSOS.length - 1, p + 1)); }}
+                            onClick={() => irParaPasso(passo + 1)}
                             disabled={passo === PASSOS.length - 1}
                             aria-label="Próxima corda"
-                            className="lg:hidden absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 shadow-md text-blue-950 flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition-all"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 shadow-md text-blue-950 flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition-all"
                         >
                             ›
                         </button>
@@ -225,8 +201,8 @@ export default function Graduation() {
                         </div>
 
                         <span className="pointer-events-none absolute left-5 bottom-4 rounded-full bg-white/85 px-3 py-1 text-xs text-blue-950/70 shadow z-10">
-                            <span className="hidden lg:inline">Role a página para trocar de corda · arraste para girar</span>
-                            <span className="lg:hidden">Apresentação automática</span>
+                            <span className="hidden lg:inline">{isPlaying ? "Apresentação automática" : "Clique numa corda"} · arraste para girar · Ctrl + rolar para zoom</span>
+                            <span className="lg:hidden">{isPlaying ? "Apresentação automática" : "Use as setas para trocar"}</span>
                         </span>
                         
                         <span className="absolute right-5 bottom-4 text-xs text-blue-950/50 z-10">{selected + 1} / {graduacoes.length}</span>
@@ -235,7 +211,7 @@ export default function Graduation() {
                         </div>
                     </div>
 
-                    <ol ref={listRef} className="hidden lg:grid relative bg-white grid-cols-1 gap-1 h-[min(620px,calc(100vh-17rem))] overflow-y-auto pr-2">
+                    <ol ref={listRef} data-lenis-prevent className="hidden lg:grid relative bg-white grid-cols-1 gap-1 h-[min(620px,calc(100vh-17rem))] overflow-y-auto pr-2">
                         {graduacoes.map((graduacao, index) => {
                             const startsCategory = graduacao.categoria && graduacao.categoria !== graduacoes[index - 1]?.categoria
                             return (
