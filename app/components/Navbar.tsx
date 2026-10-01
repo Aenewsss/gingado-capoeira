@@ -4,6 +4,7 @@ import { Disclosure, } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect, useState } from 'react'
 
 const navigation = [
     { name: 'Gingado Capoeira', href: '/#sobre', current: false },
@@ -14,17 +15,59 @@ const navigation = [
     { name: 'Transparência', href: '/transparencia', current: false },
 ]
 
+const SECTION_IDS = navigation.map(item => item.href.split('#')[1]).filter(Boolean)
+
 function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ')
 }
 
-export default function Example() {
+function useScrollState(enabled: boolean) {
+    const [scrolled, setScrolled] = useState(false)
+    const [activeSection, setActiveSection] = useState('')
+
+    useEffect(() => {
+        if (!enabled) return
+
+        function onScroll() {
+            setScrolled(window.scrollY > 40)
+            const marker = window.innerHeight * 0.35
+            const current = SECTION_IDS.findLast(id => {
+                const element = document.getElementById(id)
+                return element ? element.getBoundingClientRect().top <= marker : false
+            })
+            setActiveSection(current ?? '')
+        }
+
+        onScroll()
+        window.addEventListener('scroll', onScroll, { passive: true })
+        return () => window.removeEventListener('scroll', onScroll)
+    }, [enabled])
+
+    return { scrolled, activeSection }
+}
+
+interface IProps {
+    overlay?: boolean
+}
+
+export default function Navbar({ overlay = false }: IProps) {
+    const { scrolled, activeSection } = useScrollState(overlay)
+
+    const isActive = (href: string) => overlay && href.endsWith(`#${activeSection}`)
+
     return (
-        <Disclosure as="nav" className="bg-white">
+        <Disclosure
+            as="nav"
+            className={classNames(
+                'bg-white',
+                overlay ? 'fixed inset-x-0 top-0 z-50 transition-shadow duration-500' : '',
+                overlay && scrolled ? 'shadow-lg shadow-black/5' : '',
+            )}
+        >
             {({ open }) => (
                 <>
                     <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-                        <div className="relative flex h-24 items-center justify-between">
+                        <div className={classNames('relative flex items-center justify-between transition-all duration-500', overlay && scrolled ? 'h-16 sm:h-20' : 'h-20 sm:h-24')}>
                             <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
                                 {/* Mobile menu button*/}
                                 <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
@@ -41,9 +84,9 @@ export default function Example() {
                                 <div className="flex flex-shrink-0 items-center">
                                     <Link href="/">
                                         <Image
-                                            className="h-12 sm:h-20 w-auto"
+                                            className={classNames('w-auto transition-all duration-500', overlay && scrolled ? 'h-10 sm:h-14' : 'h-12 sm:h-20')}
                                             src="/logo-completa.svg"
-                                            alt="Your Company"
+                                            alt="Associação Cultural Gingado Capoeira"
                                             width={300}
                                             height={200}
                                         />
@@ -53,13 +96,15 @@ export default function Example() {
                             </div>
                             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
                                 <div className="hidden sm:ml-6 sm:block">
-                                    <div className="flex space-x-4">
+                                    <div className="flex space-x-1 lg:space-x-3">
                                         {navigation.map((item) => (
                                             <a
                                                 key={item.name}
                                                 href={item.href}
                                                 className={classNames(
-                                                    item.current ? 'bg-black text-white hover:scale-105' : 'text-black hover:font-semibold ',
+                                                    item.current ? 'bg-black text-white hover:scale-105 transition-transform' : 'text-black',
+                                                    !item.current ? "relative after:absolute after:left-3 after:right-3 after:bottom-1 after:h-0.5 after:bg-red-600 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100" : '',
+                                                    !item.current && isActive(item.href) ? 'after:scale-x-100 font-semibold' : 'after:scale-x-0',
                                                     'rounded-md px-3 py-2 text-sm font-medium'
                                                 )}
                                                 aria-current={item.current ? 'page' : undefined}
@@ -73,7 +118,7 @@ export default function Example() {
                         </div>
                     </div>
 
-                    <Disclosure.Panel className="sm:hidden">
+                    <Disclosure.Panel className="sm:hidden bg-white">
                         <div className="space-y-1 px-2 pb-3 pt-2">
                             {navigation.map((item) => (
                                 <Disclosure.Button

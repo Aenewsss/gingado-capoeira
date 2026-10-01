@@ -8,6 +8,8 @@
   --background-end-rgb: 255, 255, 255;
 }
 
+/* Mantido para as páginas internas (admin, login, galeria...), que dependem dele.
+   A home define cores explícitas e não é afetada. */
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
@@ -20,6 +22,12 @@
   scroll-behavior: smooth !important;
 }
 
+/* As animações de entrada lateral (Reveal fade-left/right) não podem criar rolagem horizontal. */
+html,
+body {
+  overflow-x: clip;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(to bottom,
@@ -27,8 +35,116 @@ body {
       rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
 }
 
+.home {
+  color-scheme: light;
+  color: #0b1023;
+  background: #ffffff;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* ---------- Reveal on scroll ---------- */
+.reveal {
+  opacity: 0;
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), clip-path 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal[data-variant="fade-up"] { transform: translateY(48px); }
+.reveal[data-variant="fade-left"] { transform: translateX(-64px); }
+.reveal[data-variant="fade-right"] { transform: translateX(64px); }
+.reveal[data-variant="scale"] { transform: scale(0.88); }
+.reveal[data-variant="clip"] { clip-path: inset(0 100% 0 0); opacity: 1; }
+
+.reveal[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 0 0 0);
+}
+
+/* ---------- Word by word ---------- */
+.word-reveal span {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.6em) rotate(4deg);
+  filter: blur(6px);
+  animation: word-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes word-in {
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/* ---------- Gold shimmer text ---------- */
+.text-shimmer {
+  background: linear-gradient(110deg, #b8892b 0%, #f7e08a 25%, #c9971f 45%, #fff4c2 55%, #b8892b 75%, #f7e08a 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+
+@keyframes shimmer {
+  to { background-position: -250% 0; }
+}
+
+/* ---------- Marquee ---------- */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* ---------- Hero ---------- */
+.hero-bg {
+  animation: hero-zoom 18s ease-out forwards;
+}
+
+@keyframes hero-zoom {
+  from { transform: scale(1.18); }
+  to { transform: scale(1.02); }
+}
+
+.scroll-cue {
+  animation: scroll-cue 2s ease-in-out infinite;
+}
+
+@keyframes scroll-cue {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(10px); opacity: 1; }
+}
+
+/* ---------- Event card tilt ---------- */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.25s ease-out, box-shadow 0.25s ease-out;
+}
+
+/* ---------- Icons ---------- */
+.icon-bob:hover img { animation: bob 0.6s ease-in-out; }
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px) rotate(-6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; clip-path: none; }
+  .word-reveal span { opacity: 1; transform: none; filter: none; }
 }
