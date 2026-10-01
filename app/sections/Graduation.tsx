@@ -21,7 +21,7 @@ const PASSOS = (Object.keys(SISTEMAS) as Sistema[]).flatMap(sistema =>
     SISTEMAS[sistema].graduacoes.map((_, index) => ({ sistema, index }))
 )
 
-/** Quanto a página rola (em vh) para avançar uma corda. */
+/** Quanto a página rola (em vh) para avançar uma corda (apenas no Desktop). */
 const VH_POR_CORDA = 16
 
 /** Todas as cordas num varal só, na mesma ordem dos passos (infantil e depois adulto). */
@@ -50,20 +50,38 @@ function Swatch({ graduacao }: { graduacao: Graduacao }) {
 
 export default function Graduation() {
     const [passo, setPasso] = useState(0)
+    const [isDesktop, setIsDesktop] = useState(false)
     const sectionRef = useRef<HTMLElement>(null)
     const listRef = useRef<HTMLOListElement>(null)
+
+    // Refs para controle do gesto de swipe no mobile
+    const touchStartX = useRef<number | null>(null)
+    const touchStartY = useRef<number | null>(null)
 
     const { sistema, index: selected } = PASSOS[passo]
     const { graduacoes } = SISTEMAS[sistema]
     const current = graduacoes[selected]
 
-    /** A seção é alta e o conteúdo fica fixo (sticky); o quanto já se rolou dentro dela define a corda da vez. */
+    /** Identifica se está no desktop para habilitar a altura estendida do scroll */
+    useEffect(() => {
+        function checkDesktop() {
+            setIsDesktop(window.innerWidth >= 1024)
+        }
+        checkDesktop()
+        window.addEventListener("resize", checkDesktop)
+        return () => window.removeEventListener("resize", checkDesktop)
+    }, [])
+
+    /** A rolagem da página só altera o passo no DESKTOP */
     useEffect(() => {
         function onScroll() {
+            if (window.innerWidth < 1024) return // No mobile, o scroll da página é livre
+
             const section = sectionRef.current
             if (!section) return
             const rect = section.getBoundingClientRect()
             const scrollable = rect.height - window.innerHeight
+            if (scrollable <= 0) return
             const progress = Math.min(Math.max(-rect.top / scrollable, 0), 1)
             setPasso(Math.min(Math.floor(progress * PASSOS.length), PASSOS.length - 1))
         }
@@ -76,7 +94,7 @@ export default function Graduation() {
         }
     }, [])
 
-    /** Mantém a corda da vez visível na lista lateral. */
+    /** Mantém a corda da vez visível na lista lateral (desktop). */
     useEffect(() => {
         const list = listRef.current
         const item = list?.querySelector<HTMLElement>(`[data-index="${selected}"]`)
@@ -84,8 +102,43 @@ export default function Graduation() {
         list.scrollTo({ top: item.offsetTop - list.clientHeight / 2 + item.clientHeight / 2, behavior: "smooth" })
     }, [selected, sistema])
 
-    /** Clicar numa corda (na lista, nas abas ou no 3D) rola a página até o ponto dela. */
+    /** Trata o início do toque no mobile */
+    function handleTouchStart(e: React.TouchEvent) {
+        if (isDesktop) return
+        touchStartX.current = e.touches[0].clientX
+        touchStartY.current = e.touches[0].clientY
+    }
+
+    /** Trata o fim do toque no mobile e calcula o swipe horizontal no eixo X */
+    function handleTouchEnd(e: React.TouchEvent) {
+        if (isDesktop || touchStartX.current === null || touchStartY.current === null) return
+
+        const deltaX = e.changedTouches[0].clientX - touchStartX.current
+        const deltaY = e.changedTouches[0].clientY - touchStartY.current
+
+        const SWIPE_THRESHOLD = 40 // Distância mínima em pixels para considerar o swipe
+
+        // Só aciona se o movimento for predominantemente no eixo X (horizontal)
+        if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
+            if (deltaX < 0) {
+                // Arrastou para a esquerda -> Próxima corda
+                setPasso(p => Math.min(PASSOS.length - 1, p + 1))
+            } else {
+                // Arrastou para a direita -> Corda anterior
+                setPasso(p => Math.max(0, p - 1))
+            }
+        }
+
+        touchStartX.current = null;
+        touchStartY.current = null;
+    }
+
+    /** Ir para passo: no desktop rola a página; no mobile apenas troca a corda */
     function irParaPasso(passoAlvo: number) {
+        if (window.innerWidth < 1024) {
+            setPasso(passoAlvo)
+            return
+        }
         const section = sectionRef.current
         if (!section) return
         const scrollable = section.offsetHeight - window.innerHeight
@@ -101,9 +154,9 @@ export default function Graduation() {
             ref={sectionRef}
             className="relative bg-white overflow-x-clip"
             id="sistema"
-            style={{ height: `calc(100vh + ${PASSOS.length * VH_POR_CORDA}vh)` }}
+            style={isDesktop ? { height: `calc(100vh + ${PASSOS.length * VH_POR_CORDA}vh)` } : undefined}
         >
-            <div className="sticky top-0 h-screen flex flex-col justify-center pt-24 pb-6">
+            <div className="lg:sticky lg:top-0 lg:h-screen h-auto flex flex-col justify-center pt-12 lg:pt-24 pb-6">
                 <div className="px-4 text-center">
                     <p className="text-sm tracking-[0.3em] uppercase text-red-600">Cordas e ponteiras</p>
                     <h2 className="mt-1 text-3xl lg:text-5xl text-blue-950">Sistema de Graduação</h2>
@@ -124,21 +177,46 @@ export default function Graduation() {
                 </div>
 
                 <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-5 grid lg:grid-cols-3 gap-8 items-center min-h-0">
-                    <div className="lg:col-span-2 relative h-[min(620px,calc(100vh-17rem))] rounded-3xl bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#e8ecf6_60%,#d7deef_100%)] ring-1 ring-blue-950/10 shadow-inner overflow-hidden">
+                    <div className="lg:col-span-2 relative h-[min(500px,calc(100vh-17rem))] sm:h-[min(620px,calc(100vh-17rem))] rounded-3xl bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#e8ecf6_60%,#d7deef_100%)] ring-1 ring-blue-950/10 shadow-inner">
                         
-                        {/* No mobile, pointer-events-none impede que qualquer toque seja capturado pelo 3D */}
-                        <div className="w-full h-full pointer-events-none lg:pointer-events-auto">
+                        {/* Area de toque no mobile com suporte a swipe horizontal */}
+                        <div 
+                            className="w-full h-full"
+                            onTouchStart={handleTouchStart}
+                            onTouchEnd={handleTouchEnd}
+                        >
                             <Corda3D graduacoes={TODAS_AS_CORDAS} selected={passo} gapAt={INICIO_ADULTO} onSelect={irParaPasso} />
                         </div>
+
+                        {/* Botões de navegação lateral adicionais para apoio no mobile */}
+                        <button
+                            onClick={() => setPasso(p => Math.max(0, p - 1))}
+                            disabled={passo === 0}
+                            aria-label="Corda anterior"
+                            className="lg:hidden absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-md text-blue-950 flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition-all"
+                        >
+                            ‹
+                        </button>
+                        <button
+                            onClick={() => setPasso(p => Math.min(PASSOS.length - 1, p + 1))}
+                            disabled={passo === PASSOS.length - 1}
+                            aria-label="Próxima corda"
+                            className="lg:hidden absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-md text-blue-950 flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition-all"
+                        >
+                            ›
+                        </button>
 
                         <div key={`${sistema}-${selected}`} className="word-reveal absolute left-4 top-4 text-left pointer-events-none px-4 py-2 rounded-2xl bg-white/90 backdrop-blur shadow-lg">
                             {current.categoria && <span className="!block text-xs tracking-[0.25em] uppercase text-red-600" style={{ animationDelay: "0ms" }}>{current.categoria}</span>}
                             <span className="!block text-2xl sm:text-3xl text-blue-950 font-semibold" style={{ animationDelay: "60ms" }}>{current.nome}</span>
                             {current.observacao && <span className="!block text-sm text-blue-950/60" style={{ animationDelay: "120ms" }}>{current.observacao}</span>}
                         </div>
+
                         <span className="pointer-events-none absolute left-5 bottom-4 rounded-full bg-white/85 px-3 py-1 text-xs text-blue-950/70 shadow">
-                            Role a página para trocar de corda<span className="hidden lg:inline"> · arraste para girar · Ctrl + rolar para zoom</span>
+                            <span className="hidden lg:inline">Role a página para trocar de corda</span>
+                            <span className="lg:hidden">Deslize para os lados para trocar</span>
                         </span>
+                        
                         <span className="absolute right-5 bottom-4 text-xs text-blue-950/50">{selected + 1} / {graduacoes.length}</span>
                         <div className="absolute left-0 right-0 -bottom-3 h-1 rounded-full bg-blue-950/10 overflow-hidden">
                             <div className="h-full bg-red-600 transition-[width] duration-300" style={{ width: `${((passo + 1) / PASSOS.length) * 100}%` }} />
