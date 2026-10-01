@@ -1,5 +1,3 @@
-"use client"
-
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { CORES, GRADUACOES_ADULTO, GRADUACOES_INFANTIL, Graduacao } from "../data/graduacoes";
@@ -124,7 +122,8 @@ export default function Graduation() {
                 </div>
 
                 <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-5 grid lg:grid-cols-3 gap-8 items-center min-h-0">
-                    <div className="lg:col-span-2 relative h-[min(620px,calc(100vh-17rem))] rounded-3xl bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#e8ecf6_60%,#d7deef_100%)] ring-1 ring-blue-950/10 shadow-inner">
+                    {/* ADICIONADA A CLASSE `touch-pan-y` NA DIV ABAIXO */}
+                    <div className="lg:col-span-2 relative h-[min(620px,calc(100vh-17rem))] rounded-3xl bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#e8ecf6_60%,#d7deef_100%)] ring-1 ring-blue-950/10 shadow-inner touch-pan-y">
                         <Corda3D graduacoes={TODAS_AS_CORDAS} selected={passo} gapAt={INICIO_ADULTO} onSelect={irParaPasso} />
                         <div key={`${sistema}-${selected}`} className="word-reveal absolute left-4 top-4 text-left pointer-events-none px-4 py-2 rounded-2xl bg-white/90 backdrop-blur shadow-lg">
                             {current.categoria && <span className="!block text-xs tracking-[0.25em] uppercase text-red-600" style={{ animationDelay: "0ms" }}>{current.categoria}</span>}
