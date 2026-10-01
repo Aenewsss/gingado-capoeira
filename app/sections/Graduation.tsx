@@ -1,3 +1,5 @@
+"use client"
+
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { CORES, GRADUACOES_ADULTO, GRADUACOES_INFANTIL, Graduacao } from "../data/graduacoes";
