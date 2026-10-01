@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { CORES, Graduacao } from "@/app/data/graduacoes";
 import { useInView } from "@/app/hooks/useInView";
+import { useAdaptiveDpr } from "./AdaptiveQuality";
 
 const ROPE_RADIUS = 0.055
 const ROPE_LENGTH = 2.5
@@ -120,7 +121,7 @@ function Tassel({ position, color, seed }: { position: THREE.Vector3, color: str
 
         strands.instanceMatrix.needsUpdate = true
         if (strands.instanceColor) strands.instanceColor.needsUpdate = true
-        ;(strands.material as THREE.Material).needsUpdate = true
+            ; (strands.material as THREE.Material).needsUpdate = true
     }, [color, seed])
 
     return (
@@ -224,18 +225,25 @@ function HangingCord({ graduacao, index, x, selected, hovered, bumpTexture, onSe
 
 const FLY_SETTLE_DISTANCE = 0.02
 
+interface CameraRigProps {
+    focusX: number
+    isZoomed?: boolean
+}
 /**
  * Leva a câmera até a corda selecionada. O OrbitControls deixa a pessoa arrastar, girar e dar zoom;
  * enquanto ela interage o voo é interrompido, e volta a acontecer na próxima seleção.
  */
-function CameraRig({ focusX }: { focusX: number }) {
+function CameraRig({ focusX, isZoomed = true }: CameraRigProps) {
     const { camera, size } = useThree()
     const controlsRef = useRef<OrbitControlsImpl>(null)
     const flying = useRef(true)
     const desiredPosition = useMemo(() => new THREE.Vector3(), [])
     const desiredTarget = useMemo(() => new THREE.Vector3(), [])
 
-    useEffect(() => { flying.current = true }, [focusX])
+    // Ativa o voo da câmera ao mudar a corda focada OU ao alternar o zoom
+    useEffect(() => {
+        flying.current = true
+    }, [focusX, isZoomed])
 
     /**
      * A rolagem da página troca as cordas, então a rodinha só dá zoom com Ctrl/⌘ (a pinça do trackpad também
@@ -245,7 +253,7 @@ function CameraRig({ focusX }: { focusX: number }) {
         const controls = controlsRef.current
         const wrapper = controls?.domElement?.parentElement
         if (!controls || !wrapper) return
-        ;(controls.domElement as HTMLElement).style.touchAction = "pan-y"
+            ; (controls.domElement as HTMLElement).style.touchAction = "pan-y"
 
         const decideZoom = (event: WheelEvent) => { controls.enableZoom = event.ctrlKey || event.metaKey }
         const allowPinch = (event: PointerEvent) => { if (event.pointerType === "touch") controls.enableZoom = true }
@@ -262,7 +270,10 @@ function CameraRig({ focusX }: { focusX: number }) {
         const controls = controlsRef.current
         if (!controls || !flying.current) return
 
-        const distance = Math.max(1.15, 1.35 / (size.width / size.height))
+        // Aplica um multiplicador na distância quando estiver em Zoom Out
+        const zoomMultiplier = isZoomed ? 1 : 2.2
+        const distance = Math.max(1.15, 1.35 / (size.width / size.height)) * zoomMultiplier
+
         desiredTarget.set(focusX, FOCUS_HEIGHT, 0)
         desiredPosition.copy(desiredTarget).addScaledVector(CAMERA_OFFSET, distance)
 
@@ -280,7 +291,7 @@ function CameraRig({ focusX }: { focusX: number }) {
             enableDamping
             dampingFactor={0.08}
             minDistance={1.4}
-            maxDistance={9}
+            maxDistance={18} // Aumentado para acomodar a visão geral (Zoom Out)
             minPolarAngle={Math.PI * 0.3}
             maxPolarAngle={Math.PI * 0.62}
             minAzimuthAngle={-Math.PI * 0.32}
@@ -298,7 +309,7 @@ interface RackProps extends IProps {
     onHover: CordProps["onHover"]
 }
 
-function CordRack({ graduacoes, selected, hovered, gapAt, onSelect, onHover }: RackProps) {
+function CordRack({ graduacoes, selected, hovered, gapAt, onSelect, onHover, isZoomed }: RackProps) {
     const bumpTexture = useMemo(() => createWeaveBumpTexture(), [])
     useEffect(() => () => bumpTexture.dispose(), [bumpTexture])
 
@@ -307,7 +318,7 @@ function CordRack({ graduacoes, selected, hovered, gapAt, onSelect, onHover }: R
 
     return (
         <>
-            <CameraRig focusX={cordX(selected)} />
+            <CameraRig focusX={cordX(selected)} isZoomed={isZoomed} />
 
             <mesh position={[rackLength / 2, -0.06, 0]}>
                 <boxGeometry args={[rackLength + 8, 0.12, 0.3]} />
@@ -341,6 +352,7 @@ interface IProps {
     /** Índice onde começa o segundo grupo (adulto); ganha um espaço a mais no varal. */
     gapAt?: number
     onSelect: (index: number) => void
+    isZoomed?: boolean; // Prop de controle do Zoom
 }
 
 interface Tooltip {
@@ -349,8 +361,9 @@ interface Tooltip {
     y: number
 }
 
-export default function Corda3D({ graduacoes, selected, gapAt, onSelect }: IProps) {
+export default function Corda3D({ graduacoes, selected, gapAt, onSelect, isZoomed }: IProps) {
     const wrapperRef = useRef<HTMLDivElement>(null)
+    const { dpr, monitor } = useAdaptiveDpr()
     const visible = useInView(wrapperRef, { once: false, rootMargin: "0px" })
     const [tooltip, setTooltip] = useState<Tooltip | null>(null)
 
@@ -367,15 +380,16 @@ export default function Corda3D({ graduacoes, selected, gapAt, onSelect }: IProp
         <div ref={wrapperRef} className="relative w-full h-full" style={{ cursor: tooltip ? "pointer" : "default" }}>
             <Canvas
                 frameloop={visible ? "always" : "demand"}
-                dpr={[1, 1.75]}
+                dpr={dpr}
                 camera={{ position: [-3, 1, 6], fov: 40 }}
                 gl={{ antialias: true, alpha: true }}
                 onPointerMissed={() => setTooltip(null)}
             >
+                {monitor}
                 <ambientLight intensity={0.75} />
                 <directionalLight position={[-2, 4, 5]} intensity={2.2} />
                 <directionalLight position={[4, 1, 2]} intensity={0.6} color="#93c5fd" />
-                <CordRack graduacoes={graduacoes} selected={selected} gapAt={gapAt} hovered={tooltip?.index ?? null} onSelect={onSelect} onHover={handleHover} />
+                <CordRack graduacoes={graduacoes} selected={selected} gapAt={gapAt} hovered={tooltip?.index ?? null} onSelect={onSelect} onHover={handleHover} isZoomed={isZoomed} />
                 <Environment resolution={128}>
                     <Lightformer intensity={1.2} position={[0, 4, 4]} scale={[8, 3, 1]} />
                     <Lightformer intensity={0.6} position={[-5, 0, 0]} scale={[2, 6, 1]} rotation-y={Math.PI / 2} />

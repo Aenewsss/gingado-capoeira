@@ -18,7 +18,7 @@ export default function About() {
         <section className="py-24 bg-white" id="sobre">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
                 <div>
-                    <Reveal>
+                    <Reveal variant="mask">
                         <p className="text-sm tracking-[0.3em] uppercase text-red-600">Desde 2006</p>
                         <h2 className="mt-2 text-4xl lg:text-6xl text-blue-950">Associação Cultural Gingado Capoeira</h2>
                     </Reveal>
@@ -31,7 +31,7 @@ export default function About() {
                 <div className="grid grid-cols-2 gap-4">
                     {FOTOS.map((foto, index) =>
                         <Reveal key={foto.src} variant="clip" delay={index * 150} className={`overflow-hidden rounded-3xl shadow-2xl group ${index === 0 ? "col-span-2" : ""}`}>
-                            <Image className={`w-full object-cover transition-transform duration-700 group-hover:scale-105 ${index === 0 ? "h-64 sm:h-80" : "h-44 sm:h-56"}`} unoptimized src={foto.src} width={704} height={469} alt={foto.alt} />
+                            <Image className={`w-full object-cover transition-transform duration-700 group-hover:scale-105 ${index === 0 ? "h-64 sm:h-80" : "h-44 sm:h-56"}`} sizes="(min-width: 1024px) 50vw, 100vw" src={foto.src} width={704} height={469} alt={foto.alt} />
                         </Reveal>
                     )}
                 </div>

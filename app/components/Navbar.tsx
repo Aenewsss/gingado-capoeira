@@ -5,6 +5,8 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from 'react'
+import InstagramIcon from './InstagramIcon'
+import { CONTATO } from '../data/contato'
 
 const navigation = [
     { name: 'Gingado Capoeira', href: '/#sobre', current: false },
@@ -68,7 +70,7 @@ export default function Navbar({ overlay = false }: IProps) {
                 <>
                     <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
                         <div className={classNames('relative flex items-center justify-between transition-all duration-500', overlay && scrolled ? 'h-16 sm:h-20' : 'h-20 sm:h-24')}>
-                            <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
+                            <div className="absolute inset-y-0 left-0 flex items-center lg:hidden">
                                 {/* Mobile menu button*/}
                                 <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                                     <span className="absolute -inset-0.5" />
@@ -80,7 +82,7 @@ export default function Navbar({ overlay = false }: IProps) {
                                     )}
                                 </Disclosure.Button>
                             </div>
-                            <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                            <div className="flex flex-1 items-center justify-center lg:items-stretch lg:justify-start">
                                 <div className="flex flex-shrink-0 items-center">
                                     <Link href="/">
                                         <Image
@@ -94,9 +96,9 @@ export default function Navbar({ overlay = false }: IProps) {
                                 </div>
 
                             </div>
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                                <div className="hidden sm:ml-6 sm:block">
-                                    <div className="flex space-x-1 lg:space-x-3">
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-2 lg:static lg:inset-auto lg:ml-6 lg:pr-0">
+                                <div className="hidden lg:ml-6 lg:block">
+                                    <div className="flex items-center space-x-1 lg:space-x-3">
                                         {navigation.map((item) => (
                                             <a
                                                 key={item.name}
@@ -112,13 +114,16 @@ export default function Navbar({ overlay = false }: IProps) {
                                                 {item.name}
                                             </a>
                                         ))}
+                                        <a href={CONTATO.instagramUrl} target="_blank" rel="noreferrer" aria-label="Instagram da Gingado Capoeira" className="ml-1 inline-flex w-9 h-9 items-center justify-center rounded-full text-black hover:bg-red-600 hover:text-white transition-colors">
+                                            <InstagramIcon />
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <Disclosure.Panel className="sm:hidden bg-white">
+                    <Disclosure.Panel className="lg:hidden bg-white">
                         <div className="space-y-1 px-2 pb-3 pt-2">
                             {navigation.map((item) => (
                                 <Disclosure.Button
@@ -134,6 +139,9 @@ export default function Navbar({ overlay = false }: IProps) {
                                     {item.name}
                                 </Disclosure.Button>
                             ))}
+                            <a href={CONTATO.instagramUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium text-black hover:font-semibold">
+                                <InstagramIcon /> @{CONTATO.instagram}
+                            </a>
                         </div>
                     </Disclosure.Panel>
                 </>

@@ -1,50 +1,68 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowTopRightOnSquareIcon, CalendarDaysIcon, MapPinIcon } from "@heroicons/react/24/outline";
 import Reveal from "../components/Reveal";
+import InstagramIcon from "../components/InstagramIcon";
+import { CONTATO } from "../data/contato";
+
+const INFOS = [
+    { icone: MapPinIcon, rotulo: "Endereço", valor: CONTATO.endereco, href: CONTATO.mapaUrl },
+    { icone: CalendarDaysIcon, rotulo: "Treinos", valor: CONTATO.treinos, href: CONTATO.instagramUrl },
+    { icone: InstagramIcon, rotulo: "Instagram", valor: `@${CONTATO.instagram}`, href: CONTATO.instagramUrl },
+]
 
 export default function Headquarters() {
     return (
-        <section className="pb-20 bg-blue-950 text-white flex flex-col" id="sede">
-            <div className="w-full">
-                <iframe width="100%" height="600" frameBorder="0" scrolling="no"
-                    src="https://maps.google.com/maps?width=100%25&amp;height=600&amp;hl=en&amp;q=Aruc%20Cruzeiro+(Sede%20Gingado%20Capoeira%20)&amp;t=&amp;z=15&amp;ie=UTF8&amp;iwloc=B&amp;output=embed">
-                </iframe>
-            </div>
-            <div className="pt-20 flex sm:flex-row flex-col justify-between w-full px-2 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-                <Reveal variant="fade-left" as="h2" className="text-4xl lg:text-6xl text-center flex gap-4 sm:flex-row flex-col sm:items-start items-center sm:mb-0 mb-4">
-                    Nossa sede
-                    <Image className="" src="/aruc-logo.png" width={200} height={100} alt="Logo Aruc" />
-                </Reveal>
-                <Reveal variant="fade-right" delay={150} className=" flex flex-col">
-                    <ul className="flex flex-col gap-6">
-                        <li>
-                            <Link className="icon-bob flex gap-2 items-center hover:text-amber-200 transition-colors" href="https://www.google.com/maps/place/ARUC/@-15.7863474,-47.9378451,15z/data=!4m6!3m5!1s0x935a308dad555555:0xc1a3e239412e93b8!8m2!3d-15.7863474!4d-47.9378451!16s%2Fg%2F1tdz5x99?entry=ttu">
-                                <Image src="/location-icon.svg" width={30} height={30} alt="Ícone localização" />
-                                <span>
-                                    SRES Área Especial 8 - Cruzeiro Velho, Brasília - DF, 70648-500
-                                </span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link className="icon-bob flex gap-2 items-center hover:text-amber-200 transition-colors" href="https://www.instagram.com/gingadocapoeira_oficial/">
-                                <Image src="/insta-icon.svg" width={30} height={30} alt="Ícone instagram" />
-                                <span>
-                                    gingadocapoeira_oficial
-                                </span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link className="icon-bob flex gap-2 items-center hover:text-amber-200 transition-colors" href="https://www.instagram.com/gingadocapoeira_oficial/">
-                                <Image src="/calendar-icon.svg" width={30} height={30} alt="Ícone calendário" />
-                                <span>
-                                    Segundas e Quartas às 19h30
-                                </span>
-                            </Link>
-                        </li>
+        <section className="py-24 bg-slate-50" id="sede">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-5 gap-8 items-stretch">
+                <Reveal variant="fade-left" className="lg:col-span-2 rounded-3xl bg-white p-8 shadow-xl shadow-blue-950/5 ring-1 ring-blue-950/5 flex flex-col">
+                    <p className="text-sm tracking-[0.3em] uppercase text-red-600">Onde treinamos</p>
+                    <h2 className="mt-2 text-4xl lg:text-5xl text-blue-950">Nossa sede</h2>
+
+                    <div className="mt-6 flex items-center gap-4">
+                        <Image src="/aruc-logo.png" width={64} height={64} alt="Logo ARUC" className="rounded-full ring-1 ring-blue-950/10" />
+                        <p className="text-blue-950/70">{CONTATO.local}</p>
+                    </div>
+
+                    <ul className="mt-8 flex flex-col gap-5">
+                        {INFOS.map(({ icone: Icone, rotulo, valor, href }) =>
+                            <li key={rotulo}>
+                                <Link href={href} target="_blank" className="group flex gap-4 items-start">
+                                    <span className="shrink-0 w-11 h-11 rounded-xl bg-blue-950/5 text-blue-950 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
+                                        <Icone className="w-5 h-5" />
+                                    </span>
+                                    <span>
+                                        <span className="block text-xs tracking-[0.2em] uppercase text-blue-950/50">{rotulo}</span>
+                                        <span className="block text-blue-950 group-hover:text-red-600 transition-colors">{valor}</span>
+                                    </span>
+                                </Link>
+                            </li>
+                        )}
                     </ul>
+
+                    <div className="mt-auto pt-8 flex flex-wrap gap-3">
+                        <Link href={CONTATO.rotaUrl} target="_blank" className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-blue-950 text-white font-medium hover:-translate-y-0.5 transition-transform">
+                            Como chegar <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                        </Link>
+                        <Link href={CONTATO.instagramUrl} target="_blank" className="inline-flex items-center gap-2 px-5 py-3 rounded-full ring-1 ring-blue-950/20 text-blue-950 font-medium hover:bg-blue-950/5 transition-colors">
+                            <InstagramIcon className="w-4 h-4" /> Instagram
+                        </Link>
+                    </div>
+                </Reveal>
+
+                <Reveal variant="fade-right" delay={150} className="lg:col-span-3 relative min-h-[380px] rounded-3xl overflow-hidden shadow-xl shadow-blue-950/10 ring-1 ring-blue-950/5">
+                    <iframe
+                        title="Mapa da sede da Gingado Capoeira (ARUC, Cruzeiro Velho)"
+                        className="absolute inset-0 w-full h-full grayscale-[30%] contrast-[1.05]"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        src={CONTATO.mapaEmbedUrl}
+                    />
+                    <span className="pointer-events-none absolute left-4 bottom-4 rounded-full bg-white/95 backdrop-blur px-4 py-2 text-sm text-blue-950 shadow-lg">
+                        🥋 {CONTATO.treinos}
+                    </span>
                 </Reveal>
             </div>
         </section>
-
     )
 }
