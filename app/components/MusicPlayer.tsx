@@ -112,6 +112,7 @@ export default function MusicPlayer() {
         <div
             className="fixed bottom-5 right-5 z-[55] flex flex-col items-end gap-3"
             onMouseEnter={() => setAberto(true)}
+            onClick={() => setAberto(!aberto)}
         >
             <div
                 className={`w-80 max-w-[calc(100vw-2.5rem)] origin-bottom-right rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 overflow-hidden transition-all duration-300 ${aberto ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none h-0"}`}
