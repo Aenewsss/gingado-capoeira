@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Adiciona um movimento ao capoeirista 3D.
-# Uso: scripts/add-move.sh caminho/do/movimento.fbx nome-do-movimento
+# Uso: scripts/add-move.sh caminho/do/movimento.fbx nome-do-movimento [mundo]
+# Use "mundo" quando o movimento vier de outro esqueleto (ex.: a personagem feminina).
 set -euo pipefail
 
 FBX="$1"
 NOME="$2"
+MODO="${3:-}"
 BLENDER="${BLENDER:-/Applications/Blender.app/Contents/MacOS/Blender}"
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
 DESTINO="$RAIZ/public/models/moves/$NOME.glb"
@@ -15,5 +17,10 @@ npx -y @gltf-transform/cli optimize "$TEMP/$NOME.glb" "$DESTINO" --compress mesh
 rm -rf "$TEMP"
 
 LISTA="$RAIZ/app/data/movimentos.ts"
-grep -q "\"$NOME\"" "$LISTA" || sed -i '' "s/^export const MOVIMENTOS = \[/export const MOVIMENTOS = [\"$NOME\", /" "$LISTA"
+if ! grep -q "nome: \"$NOME\"" "$LISTA"; then
+    ENTRADA="    { nome: \"$NOME\"$( [ "$MODO" = mundo ] && echo ', retarget: "mundo"' ) },"
+    sed -i '' "/^export const MOVIMENTOS: Movimento\[\] = \[/a\\
+$ENTRADA
+" "$LISTA"
+fi
 echo "Pronto: $DESTINO ($(du -h "$DESTINO" | cut -f1)) — já entra no rodízio."

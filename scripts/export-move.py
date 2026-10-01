@@ -15,16 +15,22 @@ def assign(action):
 
 
 def motion(action):
-    """Quanto a ação mexe de fato nos ossos do corpo (há ações que só mexem em controles de IK)."""
+    """Quanto a ação mexe de fato nos ossos que deformam o corpo (há ações que só mexem em controles de IK,
+    e arquivos que trazem animações de outros movimentos junto)."""
     assign(action)
     first, last = int(action.frame_range[0]), int(action.frame_range[1])
-    hips = arm.pose.bones['mixamorig:Hips']
-    samples = []
-    for frame in range(first, last + 1, max(1, (last - first) // 20)):
+    deform = [bone for bone in arm.pose.bones if bone.name in DEFORM_BONES]
+    samples = {}
+    for frame in range(first, last + 1, max(1, (last - first) // 15)):
         scene.frame_set(frame)
-        samples.append(hips.matrix.to_euler())
-    return sum(max(s[i] for s in samples) - min(s[i] for s in samples) for i in range(3)) * (last - first)
+        for bone in deform:
+            samples.setdefault(bone.name, []).append(bone.matrix_basis.to_quaternion())
+    return sum(max(q.rotation_difference(qs[0]).angle for q in qs) for qs in samples.values())
 
+
+DEFORM_BONES = set()
+for mesh in [o for o in bpy.data.objects if o.type == 'MESH']:
+    DEFORM_BONES |= {group.name for group in mesh.vertex_groups}
 
 action = max(bpy.data.actions, key=motion)
 for other in list(bpy.data.actions):

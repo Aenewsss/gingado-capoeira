@@ -7,14 +7,14 @@ import type { GLTF } from "three-stdlib";
 import * as THREE from "three";
 import { useInView } from "@/app/hooks/useInView";
 import { useAdaptiveDpr } from "./AdaptiveQuality";
-import { MOVIMENTOS } from "@/app/data/movimentos";
+import { MOVIMENTOS, ModoRetarget } from "@/app/data/movimentos";
 
 /** Personagem (com textura) e o movimento "palhaço". */
 const CHARACTER_URL = "/models/capoeirista.glb"
 /** Arquivo de onde só a animação da ginga é aproveitada (outro boneco, mesmo esqueleto Mixamo). */
 const GINGA_URL = "/models/ginga.glb"
 /** Movimentos gravados em outros arquivos (mesmo esqueleto Mixamo); entram no rodízio depois do palhaço. */
-const MOVE_URLS = MOVIMENTOS.map(nome => `/models/moves/${nome}.glb`)
+const MOVE_URLS = MOVIMENTOS.map(({ nome }) => `/models/moves/${nome}.glb`)
 
 const TARGET_HEIGHT = 1.75
 /** O esqueleto acaba na base da cabeça; a altura real do corpo é um pouco maior. */
@@ -22,6 +22,8 @@ const HEAD_ALLOWANCE = 1.12
 const CROSSFADE_SECONDS = 0.45
 /** Quantas voltas de ginga antes de entrar um movimento. */
 const GINGA_LOOPS_BETWEEN_MOVES = 1
+/** Velocidade geral das animações (1 = original). */
+const ANIMATION_SPEED = 1.3
 
 /** O FBX do personagem trouxe parte dos ossos com sufixo ".001" (vira "001" no three.js). */
 function findTargetBone(root: THREE.Object3D, sourceName: string) {
@@ -81,16 +83,90 @@ function retargetRotationTrack(track: THREE.KeyframeTrack, sourceRest: THREE.Qua
     return copy
 }
 
+/** Pose de repouso (local) de cada objeto do personagem, guardada antes de qualquer animação rodar. */
+type RestPose = Map<THREE.Object3D, { position: THREE.Vector3, quaternion: THREE.Quaternion }>
+
+function captureRestPose(root: THREE.Object3D): RestPose {
+    const pose: RestPose = new Map()
+    root.traverse(object => pose.set(object, { position: object.position.clone(), quaternion: object.quaternion.clone() }))
+    return pose
+}
+
+/**
+ * Executa `fn` com o personagem na pose de repouso e depois devolve a pose atual. Necessário porque os
+ * movimentos extras carregam em segundo plano, com o personagem já gingando, e a adaptação precisa do repouso.
+ */
+function withRestPose<T>(root: THREE.Object3D, rest: RestPose, fn: () => T): T {
+    const current = captureRestPose(root)
+    rest.forEach((pose, object) => { object.position.copy(pose.position); object.quaternion.copy(pose.quaternion) })
+    root.updateMatrixWorld(true)
+    try {
+        return fn()
+    } finally {
+        current.forEach((pose, object) => { object.position.copy(pose.position); object.quaternion.copy(pose.quaternion) })
+        root.updateMatrixWorld(true)
+    }
+}
+
+/**
+ * Retarget em espaço de mundo: cada osso do personagem repete o quanto o osso equivalente girou em relação
+ * à própria pose de repouso, medido no mundo. Serve para esqueletos com eixos locais diferentes (a personagem
+ * feminina do aú, da chapa e da esquiva), onde copiar a rotação local direto entorta o corpo.
+ */
+function retargetRotationsInWorld(clip: THREE.AnimationClip, sourceRoot: THREE.Object3D, targetRoot: THREE.Object3D) {
+    const rotationTracks = clip.tracks.filter(track => track.name.endsWith(".quaternion"))
+    const times = rotationTracks[0]?.times ?? new Float32Array()
+    const pairs = rotationTracks.flatMap(track => {
+        const boneName = track.name.split(".")[0]
+        const source = sourceRoot.getObjectByName(boneName)
+        const target = findTargetBone(targetRoot, boneName)
+        return source && target ? [{ source, target }] : []
+    })
+    const targetBones = new Set(pairs.map(pair => pair.target))
+    const worldQuaternion = (object: THREE.Object3D) => object.getWorldQuaternion(new THREE.Quaternion())
+
+    sourceRoot.updateMatrixWorld(true)
+    const sourceRest = new Map(pairs.map(({ source }) => [source, worldQuaternion(source)]))
+    const targetRestWorld = new Map<THREE.Object3D, THREE.Quaternion>()
+    targetRoot.traverse(object => targetRestWorld.set(object, worldQuaternion(object)))
+
+    const sourceMixer = new THREE.AnimationMixer(sourceRoot)
+    sourceMixer.clipAction(clip).play()
+    const values = new Map(pairs.map(({ target }) => [target, new Float32Array(times.length * 4)]))
+
+    times.forEach((time, frame) => {
+        sourceMixer.setTime(time)
+        sourceRoot.updateMatrixWorld(true)
+        const targetWorld = new Map<THREE.Object3D, THREE.Quaternion>()
+        for (const { source, target } of pairs) {
+            const delta = worldQuaternion(source).multiply(sourceRest.get(source)!.clone().invert())
+            targetWorld.set(target, delta.multiply(targetRestWorld.get(target)!))
+        }
+        for (const { target } of pairs) {
+            const parent = target.parent!
+            const parentWorld = targetBones.has(parent) ? targetWorld.get(parent)! : targetRestWorld.get(parent)!
+            const local = parentWorld.clone().invert().multiply(targetWorld.get(target)!)
+            local.toArray(values.get(target)!, frame * 4)
+        }
+    })
+
+    sourceMixer.stopAllAction()
+    sourceMixer.uncacheRoot(sourceRoot)
+    return pairs.map(({ target }) => new THREE.QuaternionKeyframeTrack(`${target.name}.quaternion`, Array.from(times), Array.from(values.get(target)!)))
+}
+
 /**
  * Adapta um movimento gravado em outro boneco (ginga, armada) ao esqueleto do personagem: renomeia as trilhas de rotação para os
  * ossos dele e converte o deslocamento do quadril para o espaço e o tamanho deste corpo.
  */
-function retargetClip(clip: THREE.AnimationClip, sourceRoot: THREE.Object3D, targetRoot: THREE.Object3D, name: string) {
+function retargetClip(clip: THREE.AnimationClip, sourceRoot: THREE.Object3D, targetRoot: THREE.Object3D, name: string, modo: ModoRetarget = "direto") {
     sourceRoot.updateMatrixWorld(true)
     targetRoot.updateMatrixWorld(true)
     const sourceHips = sourceRoot.getObjectByName("mixamorigHips")!
     const targetHips = targetRoot.getObjectByName("mixamorigHips")!
     const ratio = hipsHeightAboveFeet(targetRoot, targetHips) / hipsHeightAboveFeet(sourceRoot, sourceHips)
+
+    const worldRotations = modo === "mundo" ? retargetRotationsInWorld(clip, sourceRoot, targetRoot) : []
 
     const tracks = clip.tracks.flatMap(track => {
         const [boneName, property] = track.name.split(".")
@@ -98,6 +174,7 @@ function retargetClip(clip: THREE.AnimationClip, sourceRoot: THREE.Object3D, tar
         if (!target) return []
 
         if (property === "quaternion") {
+            if (modo === "mundo") return []
             const source = sourceRoot.getObjectByName(boneName)
             if (source && REST_RELATIVE_BONES.includes(boneName)) return [retargetRotationTrack(track, source.quaternion, target)]
             const copy = track.clone()
@@ -108,7 +185,7 @@ function retargetClip(clip: THREE.AnimationClip, sourceRoot: THREE.Object3D, tar
         return []
     })
 
-    return new THREE.AnimationClip(name, clip.duration, tracks)
+    return new THREE.AnimationClip(name, clip.duration, [...tracks, ...worldRotations])
 }
 
 /** Carrega os movimentos extras em segundo plano; a ginga já roda enquanto eles chegam. */
@@ -125,15 +202,21 @@ function Capoeirista() {
     const gingaSource = useGLTF(GINGA_URL)
     const [extraClips, setExtraClips] = useState<THREE.AnimationClip[]>([])
 
+    /** Guardada antes do primeiro quadro de animação: é a referência de repouso para adaptar os movimentos. */
+    const restPose = useMemo(() => captureRestPose(character.scene), [character])
+
     const { mixer, ginga } = useMemo(() => {
         const mixer = new THREE.AnimationMixer(character.scene)
+        mixer.timeScale = ANIMATION_SPEED
         const ginga = mixer.clipAction(retargetClip(gingaSource.animations[0], gingaSource.scene, character.scene, "ginga"))
         return { mixer, ginga }
     }, [character, gingaSource])
 
     const onMovesLoaded = useCallback((sources: GLTF[]) => {
-        setExtraClips(sources.map((source, index) => retargetClip(source.animations[0], source.scene, character.scene, MOVIMENTOS[index])))
-    }, [character])
+        setExtraClips(withRestPose(character.scene, restPose, () => sources.map((source, index) =>
+            retargetClip(source.animations[0], source.scene, character.scene, MOVIMENTOS[index].nome, MOVIMENTOS[index].retarget)
+        )))
+    }, [character, restPose])
 
     /** O rodízio lê a lista por ref: os movimentos entram conforme carregam, sem reiniciar a ginga. */
     const movesRef = useRef<THREE.AnimationAction[]>([])

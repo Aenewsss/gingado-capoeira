@@ -44,7 +44,7 @@ export default function Events() {
         startViewTransition(() => {
             setViewTransitionName(image, "")
             flushSync(() => setOpenedEvent(event))
-        })
+        }).catch(() => undefined)
     }
 
     function closeEvent() {
@@ -53,7 +53,7 @@ export default function Events() {
         startViewTransition(() => {
             flushSync(() => setOpenedEvent(null))
             setViewTransitionName(image, LIGHTBOX_TRANSITION)
-        }).finally(() => setViewTransitionName(image, ""))
+        }).catch(() => undefined).finally(() => setViewTransitionName(image, ""))
     }
 
     return (
