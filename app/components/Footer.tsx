@@ -56,8 +56,8 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <p aria-hidden="true" className="mt-16 select-none text-[18vw] lg:text-[11rem] font-bold leading-none tracking-tight text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.12)] text-center">
-                    GINGADO
+                <p aria-hidden="true" className="mt-16 select-none whitespace-nowrap text-[8.5vw] lg:text-[6.5rem] font-bold leading-none tracking-tight text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.12)] text-center">
+                    GINGADO CAPOEIRA
                 </p>
 
                 <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row gap-3 justify-between text-sm text-white/50">

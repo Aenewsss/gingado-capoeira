@@ -160,7 +160,7 @@ export default function Graduation() {
                         </div>
 
                         {/* Controles: zoom (só mobile) e play/pause */}
-                        <div className="absolute right-4 top-4 z-20 flex gap-2">
+                        <div className="absolute right-4 bottom-10 lg:bottom-auto lg:top-4 z-20 flex gap-2">
                             <button
                                 onClick={() => setIsZoomed(z => !z)}
                                 className="lg:hidden px-3 py-1.5 rounded-xl bg-white/90 backdrop-blur shadow text-xs font-semibold text-blue-950 active:scale-95 transition-all"
@@ -194,9 +194,9 @@ export default function Graduation() {
                             ›
                         </button>
 
-                        <div key={`${sistema}-${selected}`} className="word-reveal absolute left-4 top-4 text-left pointer-events-none px-4 py-2 rounded-2xl bg-white/90 backdrop-blur shadow-lg z-10">
+                        <div key={`${sistema}-${selected}`} className="word-reveal absolute left-4 top-4 max-w-[calc(100%-2rem)] text-left pointer-events-none px-4 py-2 rounded-2xl bg-white/90 backdrop-blur shadow-lg z-10">
                             {current.categoria && <span className="!block text-xs tracking-[0.25em] uppercase text-red-600" style={{ animationDelay: "0ms" }}>{current.categoria}</span>}
-                            <span className="!block text-2xl sm:text-3xl text-blue-950 font-semibold" style={{ animationDelay: "60ms" }}>{current.nome}</span>
+                            <span className="!block text-xl sm:text-3xl text-blue-950 font-semibold" style={{ animationDelay: "60ms" }}>{current.nome}</span>
                             {current.observacao && <span className="!block text-sm text-blue-950/60" style={{ animationDelay: "120ms" }}>{current.observacao}</span>}
                         </div>
 
