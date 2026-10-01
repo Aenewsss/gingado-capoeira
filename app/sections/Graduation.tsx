@@ -124,15 +124,21 @@ export default function Graduation() {
                 </div>
 
                 <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-5 grid lg:grid-cols-3 gap-8 items-center min-h-0">
-                    {/* ADICIONADA A CLASSE `touch-pan-y` NA DIV ABAIXO */}
-                    <div className="lg:col-span-2 relative h-[min(620px,calc(100vh-17rem))] rounded-3xl bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#e8ecf6_60%,#d7deef_100%)] ring-1 ring-blue-950/10 shadow-inner touch-pan-y">
-                        <Corda3D graduacoes={TODAS_AS_CORDAS} selected={passo} gapAt={INICIO_ADULTO} onSelect={irParaPasso} />
+                    <div className="lg:col-span-2 relative h-[min(620px,calc(100vh-17rem))] rounded-3xl bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#e8ecf6_60%,#d7deef_100%)] ring-1 ring-blue-950/10 shadow-inner overflow-hidden">
+                        
+                        {/* No mobile, pointer-events-none impede que qualquer toque seja capturado pelo 3D */}
+                        <div className="w-full h-full pointer-events-none lg:pointer-events-auto">
+                            <Corda3D graduacoes={TODAS_AS_CORDAS} selected={passo} gapAt={INICIO_ADULTO} onSelect={irParaPasso} />
+                        </div>
+
                         <div key={`${sistema}-${selected}`} className="word-reveal absolute left-4 top-4 text-left pointer-events-none px-4 py-2 rounded-2xl bg-white/90 backdrop-blur shadow-lg">
                             {current.categoria && <span className="!block text-xs tracking-[0.25em] uppercase text-red-600" style={{ animationDelay: "0ms" }}>{current.categoria}</span>}
                             <span className="!block text-2xl sm:text-3xl text-blue-950 font-semibold" style={{ animationDelay: "60ms" }}>{current.nome}</span>
                             {current.observacao && <span className="!block text-sm text-blue-950/60" style={{ animationDelay: "120ms" }}>{current.observacao}</span>}
                         </div>
-                        <span className="pointer-events-none absolute left-5 bottom-4 rounded-full bg-white/85 px-3 py-1 text-xs text-blue-950/70 shadow">Role a página para trocar de corda · arraste para girar · Ctrl + rolar para zoom</span>
+                        <span className="pointer-events-none absolute left-5 bottom-4 rounded-full bg-white/85 px-3 py-1 text-xs text-blue-950/70 shadow">
+                            Role a página para trocar de corda<span className="hidden lg:inline"> · arraste para girar · Ctrl + rolar para zoom</span>
+                        </span>
                         <span className="absolute right-5 bottom-4 text-xs text-blue-950/50">{selected + 1} / {graduacoes.length}</span>
                         <div className="absolute left-0 right-0 -bottom-3 h-1 rounded-full bg-blue-950/10 overflow-hidden">
                             <div className="h-full bg-red-600 transition-[width] duration-300" style={{ width: `${((passo + 1) / PASSOS.length) * 100}%` }} />
