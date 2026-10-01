@@ -110,12 +110,12 @@ export default function MusicPlayer() {
 
     return (
         <div
-            className="fixed bottom-5 right-5 z-[55] flex flex-col items-end gap-3"
+            className="fixed bottom-5 right-5 z-[55]"
             onMouseEnter={() => setAberto(true)}
             onClick={() => setAberto(!aberto)}
         >
             <div
-                className={`w-80 max-w-[calc(100vw-2.5rem)] origin-bottom-right rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 overflow-hidden transition-all duration-300 ${aberto ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none h-0"}`}
+                className={`absolute w-80 bottom-16 right-0 max-w-[calc(100vw-2.5rem)] origin-bottom-right rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 overflow-hidden transition-all duration-300 ${aberto ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none h-0"}`}
                 onMouseLeave={() => setAberto(false)}
             >
                 <div className="aspect-video bg-black">

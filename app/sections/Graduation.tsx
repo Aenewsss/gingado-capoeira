@@ -51,31 +51,56 @@ function Swatch({ graduacao }: { graduacao: Graduacao }) {
 export default function Graduation() {
     const [passo, setPasso] = useState(0)
     const [isDesktop, setIsDesktop] = useState(false)
+    
+    // Estados para controle de animação e zoom no mobile
+    const [isZoomed, setIsZoomed] = useState(false) // Começa em Zoom Out no mobile
+    const [isPlaying, setIsPlaying] = useState(true) // Animação automática no mobile
+
     const sectionRef = useRef<HTMLElement>(null)
     const listRef = useRef<HTMLOListElement>(null)
-
-    // Refs para controle do gesto de swipe no mobile
-    const touchStartX = useRef<number | null>(null)
-    const touchStartY = useRef<number | null>(null)
 
     const { sistema, index: selected } = PASSOS[passo]
     const { graduacoes } = SISTEMAS[sistema]
     const current = graduacoes[selected]
 
-    /** Identifica se está no desktop para habilitar a altura estendida do scroll */
+    /** Identifica o tamanho da tela (Desktop vs Mobile) */
     useEffect(() => {
         function checkDesktop() {
-            setIsDesktop(window.innerWidth >= 1024)
+            const desktop = window.innerWidth >= 1024
+            setIsDesktop(desktop)
+            if (desktop) {
+                setIsZoomed(true) // No desktop mantemos o zoom padrão
+            }
         }
         checkDesktop()
         window.addEventListener("resize", checkDesktop)
         return () => window.removeEventListener("resize", checkDesktop)
     }, [])
 
-    /** A rolagem da página só altera o passo no DESKTOP */
+    /** Animação automática no Mobile: Começa em zoom out e depois vai trocando de corda */
+    useEffect(() => {
+        if (isDesktop || !isPlaying) return
+
+        // Após 2s no início, aplica o zoom in nas cordas
+        const zoomTimeout = setTimeout(() => {
+            setIsZoomed(true)
+        }, 2000)
+
+        // Alterna para a próxima corda a cada 3 segundos
+        const interval = setInterval(() => {
+            setPasso(prev => (prev + 1) % PASSOS.length)
+        }, 3000)
+
+        return () => {
+            clearTimeout(zoomTimeout)
+            clearInterval(interval)
+        }
+    }, [isDesktop, isPlaying])
+
+    /** A rolagem da página altera o passo SOMENTE no Desktop */
     useEffect(() => {
         function onScroll() {
-            if (window.innerWidth < 1024) return // No mobile, o scroll da página é livre
+            if (window.innerWidth < 1024) return
 
             const section = sectionRef.current
             if (!section) return
@@ -102,38 +127,6 @@ export default function Graduation() {
         list.scrollTo({ top: item.offsetTop - list.clientHeight / 2 + item.clientHeight / 2, behavior: "smooth" })
     }, [selected, sistema])
 
-    /** Trata o início do toque no mobile */
-    function handleTouchStart(e: React.TouchEvent) {
-        if (isDesktop) return
-        touchStartX.current = e.touches[0].clientX
-        touchStartY.current = e.touches[0].clientY
-    }
-
-    /** Trata o fim do toque no mobile e calcula o swipe horizontal no eixo X */
-    function handleTouchEnd(e: React.TouchEvent) {
-        if (isDesktop || touchStartX.current === null || touchStartY.current === null) return
-
-        const deltaX = e.changedTouches[0].clientX - touchStartX.current
-        const deltaY = e.changedTouches[0].clientY - touchStartY.current
-
-        const SWIPE_THRESHOLD = 40 // Distância mínima em pixels para considerar o swipe
-
-        // Só aciona se o movimento for predominantemente no eixo X (horizontal)
-        if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
-            if (deltaX < 0) {
-                // Arrastou para a esquerda -> Próxima corda
-                setPasso(p => Math.min(PASSOS.length - 1, p + 1))
-            } else {
-                // Arrastou para a direita -> Corda anterior
-                setPasso(p => Math.max(0, p - 1))
-            }
-        }
-
-        touchStartX.current = null;
-        touchStartY.current = null;
-    }
-
-    /** Ir para passo: no desktop rola a página; no mobile apenas troca a corda */
     function irParaPasso(passoAlvo: number) {
         if (window.innerWidth < 1024) {
             setPasso(passoAlvo)
@@ -177,48 +170,67 @@ export default function Graduation() {
                 </div>
 
                 <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-5 grid lg:grid-cols-3 gap-8 items-center min-h-0">
-                    <div className="lg:col-span-2 relative h-[min(500px,calc(100vh-17rem))] sm:h-[min(620px,calc(100vh-17rem))] rounded-3xl bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#e8ecf6_60%,#d7deef_100%)] ring-1 ring-blue-950/10 shadow-inner">
+                    <div className="lg:col-span-2 relative h-[min(500px,calc(100vh-17rem))] sm:h-[min(620px,calc(100vh-17rem))] rounded-3xl bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#e8ecf6_60%,#d7deef_100%)] ring-1 ring-blue-950/10 shadow-inner overflow-hidden">
                         
-                        {/* Area de toque no mobile com suporte a swipe horizontal */}
-                        <div 
-                            className="w-full h-full"
-                            onTouchStart={handleTouchStart}
-                            onTouchEnd={handleTouchEnd}
-                        >
-                            <Corda3D graduacoes={TODAS_AS_CORDAS} selected={passo} gapAt={INICIO_ADULTO} onSelect={irParaPasso} />
+                        {/* No Mobile, desativa totalmente a captura de eventos de ponteiro para o scroll rolar solto */}
+                        <div className="w-full h-full pointer-events-none lg:pointer-events-auto">
+                            <Corda3D 
+                                graduacoes={TODAS_AS_CORDAS} 
+                                selected={passo} 
+                                gapAt={INICIO_ADULTO} 
+                                onSelect={irParaPasso} 
+                                isZoomed={isZoomed}
+                            />
                         </div>
 
-                        {/* Botões de navegação lateral adicionais para apoio no mobile */}
+                        {/* Botões de controle no Mobile: Zoom e Play/Pause */}
+                        <div className="lg:hidden absolute right-4 top-4 z-20 flex gap-2">
+                            <button
+                                onClick={() => setIsZoomed(z => !z)}
+                                className="px-3 py-1.5 rounded-xl bg-white/90 backdrop-blur shadow text-xs font-semibold text-blue-950 active:scale-95 transition-all"
+                            >
+                                {isZoomed ? "🔍 Zoom Out" : "🔍 Zoom In"}
+                            </button>
+                            <button
+                                onClick={() => setIsPlaying(p => !p)}
+                                className="w-8 h-8 rounded-xl bg-white/90 backdrop-blur shadow text-xs font-bold text-blue-950 flex items-center justify-center active:scale-95 transition-all"
+                                aria-label={isPlaying ? "Pausar animação" : "Iniciar animação"}
+                            >
+                                {isPlaying ? "⏸" : "▶"}
+                            </button>
+                        </div>
+
+                        {/* Botões de navegação lateral (Anterior / Próximo) no Mobile */}
                         <button
-                            onClick={() => setPasso(p => Math.max(0, p - 1))}
+                            onClick={() => { setIsPlaying(false); setPasso(p => Math.max(0, p - 1)); }}
                             disabled={passo === 0}
                             aria-label="Corda anterior"
-                            className="lg:hidden absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-md text-blue-950 flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition-all"
+                            className="lg:hidden absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 shadow-md text-blue-950 flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition-all"
                         >
                             ‹
                         </button>
                         <button
-                            onClick={() => setPasso(p => Math.min(PASSOS.length - 1, p + 1))}
+                            onClick={() => { setIsPlaying(false); setPasso(p => Math.min(PASSOS.length - 1, p + 1)); }}
                             disabled={passo === PASSOS.length - 1}
                             aria-label="Próxima corda"
-                            className="lg:hidden absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-md text-blue-950 flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition-all"
+                            className="lg:hidden absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 shadow-md text-blue-950 flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition-all"
                         >
                             ›
                         </button>
 
-                        <div key={`${sistema}-${selected}`} className="word-reveal absolute left-4 top-4 text-left pointer-events-none px-4 py-2 rounded-2xl bg-white/90 backdrop-blur shadow-lg">
+                        <div key={`${sistema}-${selected}`} className="word-reveal absolute left-4 top-4 text-left pointer-events-none px-4 py-2 rounded-2xl bg-white/90 backdrop-blur shadow-lg z-10">
                             {current.categoria && <span className="!block text-xs tracking-[0.25em] uppercase text-red-600" style={{ animationDelay: "0ms" }}>{current.categoria}</span>}
                             <span className="!block text-2xl sm:text-3xl text-blue-950 font-semibold" style={{ animationDelay: "60ms" }}>{current.nome}</span>
                             {current.observacao && <span className="!block text-sm text-blue-950/60" style={{ animationDelay: "120ms" }}>{current.observacao}</span>}
                         </div>
 
-                        <span className="pointer-events-none absolute left-5 bottom-4 rounded-full bg-white/85 px-3 py-1 text-xs text-blue-950/70 shadow">
-                            <span className="hidden lg:inline">Role a página para trocar de corda</span>
-                            <span className="lg:hidden">Deslize para os lados para trocar</span>
+                        <span className="pointer-events-none absolute left-5 bottom-4 rounded-full bg-white/85 px-3 py-1 text-xs text-blue-950/70 shadow z-10">
+                            <span className="hidden lg:inline">Role a página para trocar de corda · arraste para girar</span>
+                            <span className="lg:hidden">Apresentação automática</span>
                         </span>
                         
-                        <span className="absolute right-5 bottom-4 text-xs text-blue-950/50">{selected + 1} / {graduacoes.length}</span>
-                        <div className="absolute left-0 right-0 -bottom-3 h-1 rounded-full bg-blue-950/10 overflow-hidden">
+                        <span className="absolute right-5 bottom-4 text-xs text-blue-950/50 z-10">{selected + 1} / {graduacoes.length}</span>
+                        <div className="absolute left-0 right-0 -bottom-3 h-1 rounded-full bg-blue-950/10 overflow-hidden z-10">
                             <div className="h-full bg-red-600 transition-[width] duration-300" style={{ width: `${((passo + 1) / PASSOS.length) * 100}%` }} />
                         </div>
                     </div>
